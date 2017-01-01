@@ -1,0 +1,1 @@
+Date	Latitude(deg) 	Longitude(deg)	hamsl(m)	hafl(m)	climbrate(cm/s)	GroundSpeed(m/s)	Airspeed(m/s)	Mav_Link(%)	Rssi_Link(%)	Throttle	Roll(deg)	Pitch(deg)	Yaw(deg)

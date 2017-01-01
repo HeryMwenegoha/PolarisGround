@@ -1,0 +1,279 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{AB12218A-F685-4197-8320-8CA64BDBBF36}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>UGCS3</RootNamespace>
+    <AssemblyName>UGCS3</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>UGCS3.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AForge">
+      <HintPath>F:\FCS&amp;GCS\AASCoGroundControl\AASCoGroundControl\bin\Debug\AForge.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="AForge.Video, Version=2.2.5.0, Culture=neutral, PublicKeyToken=cbfb6e07d173c401, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>F:\FCS&amp;GCS\AASCoGroundControl\AASCoGroundControl\bin\Debug\AForge.Video.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Video.DirectShow">
+      <HintPath>F:\FCS&amp;GCS\AASCoGroundControl\AASCoGroundControl\bin\Debug\AForge.Video.DirectShow.dll</HintPath>
+    </Reference>
+    <Reference Include="GMap.NET.Core, Version=1.7.0.0, Culture=neutral, PublicKeyToken=b85b9027b614afef, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\OneDrive\Documents\GitHub\greatmaps\Demo.WindowsForms\bin\Debug\GMap.NET.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="GMap.NET.WindowsForms, Version=1.7.0.0, Culture=neutral, PublicKeyToken=b85b9027b614afef, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\OneDrive\Documents\GitHub\greatmaps\Demo.WindowsForms\bin\Debug\GMap.NET.WindowsForms.dll</HintPath>
+    </Reference>
+    <Reference Include="MetaDataExtractor">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Mission Planner\MetaDataExtractor.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Speech" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
+    <Reference Include="ZedGraph">
+      <HintPath>..\..\..\..\..\Documents\MyApps\ZedGraph_Control_Test\ZedGraph.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Common\common.cs" />
+    <Compile Include="Common\VerticalProgressBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ComPort\SerialConnection.cs" />
+    <Compile Include="GeneralMethods.cs" />
+    <Compile Include="Global.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HIL\Xplane10\Hil.cs" />
+    <Compile Include="HIL\Xplane10\Xplane.cs" />
+    <Compile Include="INS_Calibration\AccelCalibration.cs" />
+    <Compile Include="Logs\LogMavlink.cs" />
+    <Compile Include="Log\Log.cs" />
+    <Compile Include="MainView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainView.Designer.cs">
+      <DependentUpon>MainView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Map\GMapDirectionMarker.cs" />
+    <Compile Include="Map\GmapTargetMarker.cs" />
+    <Compile Include="Map\GMapWayPointMarker.cs" />
+    <Compile Include="MavlinkProtocol\MavlinkExecution.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings\GPSSettings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>GPSSettings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Settings\XplaneHil.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>XplaneHil.settings</DependentUpon>
+    </Compile>
+    <Compile Include="UsableControls\CustomDataGrid.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UsableControls\CustomDataGrid.Designer.cs">
+      <DependentUpon>CustomDataGrid.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UsableControls\SettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UsableControls\SettingsControl.Designer.cs">
+      <DependentUpon>SettingsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UsableControls\WayPointControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UsableControls\WayPointControl.Designer.cs">
+      <DependentUpon>WayPointControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UsableForms\ParameterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UsableForms\ParameterForm.Designer.cs">
+      <DependentUpon>ParameterForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Variables.cs" />
+    <EmbeddedResource Include="MainView.resx">
+      <DependentUpon>MainView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="MavlinkProtocol\Mavlink.cs" />
+    <Compile Include="MavlinkProtocol\MavlinkCRC.cs" />
+    <Compile Include="MavlinkProtocol\MavLinkSerialPacketClass.cs" />
+    <Compile Include="MavlinkProtocol\MavlinkUtil.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <EmbeddedResource Include="UsableControls\CustomDataGrid.resx">
+      <DependentUpon>CustomDataGrid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UsableControls\SettingsControl.resx">
+      <DependentUpon>SettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UsableControls\WayPointControl.resx">
+      <DependentUpon>WayPointControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UsableForms\ParameterForm.resx">
+      <DependentUpon>ParameterForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <None Include="Settings\GPSSettings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>GPSSettings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Settings\XplaneHil.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>XplaneHil.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\home_button_main%2864x64%29.fw.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\configuration_and_settings_button.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\connection_link-off%2864x64%29.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\connection_link-on%2864x64%29.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\attitude_background_930x1593.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\attitude_indicator_wing.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\connection_arrow_not_connected%2864x64%29.fw1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bigstock-UAV-army-drone-flying-for-a-ne-37528018.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\locohale_map_asset_main_red%2864x36%29.fw.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\homewaypoint_new%2860x70%29.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\button_down%2840x23%29.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\button_up%2840x23%29.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\generic_waypoint%2850x58%29.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="INS_Calibration\CalibrationArduino.txt" />
+    <None Include="Resources\plan_mission_status_off%2850x50%29.png" />
+    <None Include="Resources\plan_mission_status_on%2850x50%29.png" />
+    <None Include="Resources\plan_mission+new.fw%2864x64%29.fw1.png" />
+    <None Include="Resources\mission_planning_64_x_64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

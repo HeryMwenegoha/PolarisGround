@@ -1,0 +1,563 @@
+﻿#pragma once
+#if ACC_CALIBRATION == 1
+Acceleromter AccelerometerClass;
+AccelerometerClass.Sample_Processing(&Serial, serialPort);
+#endif
+
+#if MAG_CALIBRATION == 1
+Magnetometer MagnetomterClass;
+MagnetomterClass.Mag_Calibration(&Serial, serialPort);
+#endif
+
+float xraw, yraw,zraw;
+float b1 = 333.72, b2 = 17.31, b3 = -525.59, b4 = 8214.55, b5 = 8158.30, b6 = 8315.72;
+float JtJr[6][6] =  
+{
+  {0,0,0,0,0,0},
+  {0,0,0,0,0,0},
+  {0,0,0,0,0,0},
+  {0,0,0,0,0,0},
+  {0,0,0,0,0,0},
+  {0,0,0,0,0,0},
+};
+float Jr[6] = {0,0,0,0,0,0};
+
+
+/*@ Accelerometer Class
+ *@ Created by Hery A Mwenegoha (C) 2016
+ *@ Works with SerialPort 0 as the Output window
+ *@ Might be modified to be carried out on the PC
+ */
+class Acceleromter
+{
+  public:
+  Acceleromter(){};
+  void update_matrices();
+  void reset_matrices();
+  float row_switch(float *Hess , const int pivrow, const int switchrow);
+  boolean gauselimination_pivoting(float *Delta);
+  const String serial_message(FastSerial *Port);
+  void calibrate_accelerometer(FastSerial *Port, int16_t xvector[120], int16_t yvector[120], int16_t zvector[120]);
+  void Sample_Processing(FastSerial *Port, byte PortNumber);
+};
+
+// Update the Jacobian Matrices
+void 
+Acceleromter::update_matrices()
+{	
+  float drdb1 = 2.0*(xraw - b1)/pow(b4,2);
+  float drdb2 = 2.0*(yraw - b2)/pow(b5,2);
+  float drdb3 = 2.0*(zraw - b3)/pow(b6,2);
+		
+  float drdb4 = 2.0*((xraw - b1)*(xraw - b1))/pow(b4,3);
+  float drdb5 = 2.0*((yraw - b2)*(yraw - b2))/pow(b5,3);
+  float drdb6 = 2.0*((zraw - b3)*(zraw - b3))/pow(b6,3);
+    
+  float ax    = (xraw - b1)/b4;
+  float ay    = (yraw - b2)/b5;
+  float az    = (zraw - b3)/b6;
+		
+  float ax_sq = ax*ax;
+  float ay_sq = ay*ay;
+  float az_sq = az*az;
+		
+  float Residual = 1 -(ax_sq + ay_sq + az_sq); // scalar quantity
+  
+  float Jacobian[6] = {drdb1,drdb2,drdb3,drdb4,drdb5,drdb6}; 
+						
+  for(int y = 0; y<6; y++)
+  {
+    for(int x = 0; x<6; x++)
+    {
+       JtJr[y][x] += Jacobian[y]*Jacobian[x];   					
+    }					
+       Jr[y] += Jacobian[y] * Residual;
+  }     
+}
+
+// Resets the Jacobian Matrices before computation
+void 
+Acceleromter::reset_matrices()
+{
+   for(int y = 0; y<6; y++)
+   {
+      for(int x = 0; x<6; x++)
+      {
+        JtJr[y][x] = 0.0f;   					
+      }					
+      Jr[y]        = 0.0f;
+   }
+}
+
+// Performs a row switch to implement partial pivoting
+float 
+Acceleromter::row_switch(float *Hess , const int pivrow, const int switchrow)
+{
+  for(int col = 0; col<7; col++)
+  {
+    float pivmat             =  Hess[pivrow   *7 + col];
+    float switchmat 	     =  Hess[switchrow*7 + col];
+    Hess[pivrow   *7 + col]  =  switchmat;
+    Hess[switchrow*7 + col]  =  pivmat;			
+  }
+}
+
+// Performs Gaussian elimination with back substitution to solve a system of 6 linear equations
+boolean 
+Acceleromter::gauselimination_pivoting(float *Delta)
+{        
+  // new matrix for gauss elimination method..
+  #if EXAMPLE_GAUSS == 1
+  float Gauss_Matrix[6][7]  = 
+  {
+    { 3.0000,  -4.0000,    2.0000,    1.0000,    5.0000,   6.0000, 12},
+    {13.0000,   4.0000,   12.0000,   10.0000,   51.0000,  61.0000, 16},
+    { 3.1500, -24.0000,  -12.0000,   12.0000,    5.6000,   7.6000, 19},
+    { 1.3000,  -1.4000,    2.9000,   11.0000,   85.0000,  16.0000, 1},
+    { 9.0000,   7.0000,    6.0000,    1.0000,   17.0000,   3.0000, 12},
+    {32.1500, -42.0000,   22.0000,   12.0000,   52.0000,  62.0000, -3}
+  };
+  #else
+  float Gauss_Matrix[6][7]  = 
+  {
+    {0,  0,   0,   0,   0,   0 , 0},
+    {0,  0,   0,   0,   0,   0 , 0},
+    {0,  0,   0,   0,   0,   0 , 0},
+    {0,  0,   0,   0,   0,   0 , 0},
+    {0,  0,   0,   0,   0,   0 , 0},
+    {0,  0,   0,   0,   0,   0 , 0},
+  };
+  
+  // populate gauss matrix
+  for(int y = 0; y<6; y++)
+  {
+    for(int x = 0; x<6; x++)
+    {
+      Gauss_Matrix[y][x] = JtJr[y][x];
+    }
+    Gauss_Matrix[y][6]   = Jr[y];
+  }
+  #endif
+  	
+  int diag_index     = 0;
+  const int rows     = 6;
+  const int columns  = 7;
+  int pivrow         = 0;  // the row to be moved from its position to switchrow.
+  int pivcol         = 0;
+  int switchrow      = 0;  // the row that will have to move to pivrow if it has the max absolute value
+  float temp         = 0;  // stores maximum value
+	
+  for(int diag = 0; diag < (rows-1); diag++)
+  {
+    // Set the position to start checking for the max value to perform pivoting (row switching). 
+    pivrow     = diag;	
+    pivcol     = diag;	
+    switchrow  = diag;
+							
+    // iterate down the rows starting from the pivrow and pivcolumn			
+    for(int pivindex = pivrow; pivindex < rows; pivindex++)
+    {
+	if(abs(Gauss_Matrix[pivindex][pivcol]) >= temp)
+	{
+	  temp = abs(Gauss_Matrix[pivindex][pivcol]); // the max value identified 
+	  switchrow = pivindex;					    // the row that needs to be switched to the current pivot row.
+	}
+    }
+			
+    // check for singularity in the pivot row (which in real sense should be restated as the row that has the largest diagonal element)
+    // but for now this is the switchrow
+    if(Gauss_Matrix[switchrow][diag] == 0)
+    {
+	return false;
+    }
+			
+    // Perform Pivoting, row switching before forward elimination
+    if(switchrow != pivrow)
+    {
+      row_switch(Gauss_Matrix[0], pivrow, switchrow);
+    }
+			
+    // Get the max value of the diagonal element for the forward elimination
+    // Forward Elimination
+    // Happens from current diag-row +1 
+    // for each row calculate the multiplying factor for the diagonal row
+						
+    for(int i = (diag+1); i<rows; i++)
+    {
+      int pivotIndex  = diag;
+      int nextIndex    = i;
+				
+      float max_pivot  = Gauss_Matrix[pivotIndex][pivotIndex];
+      float FirstVector_Multfactor = Gauss_Matrix[nextIndex][pivotIndex]/max_pivot;
+				
+      // iterate through the column and perform subtraction/elimination
+      for(int x = 0; x < columns; x++)
+      {				
+	float FirstVector_Value     = Gauss_Matrix[pivotIndex][x] * FirstVector_Multfactor;
+	float SecondVector_Value    = Gauss_Matrix[nextIndex][x];
+	float DiffVector_Value      = FirstVector_Value - SecondVector_Value;
+	Gauss_Matrix[nextIndex][x]  = DiffVector_Value; // substitute value back into the gaussian matrix
+      }
+     }
+    }
+        
+    // Answers to the 6 unknowns in the equation
+    for(int y = 5; y>= 0; y--)
+    {
+       switch(y)
+        {
+          case 5:
+          Delta[y] = Gauss_Matrix[y][6] / Gauss_Matrix[y][y];
+          break;
+          
+          case 4:
+          Delta[y] = (Gauss_Matrix[y][6] - Gauss_Matrix[y][(y+1)] * Delta[y+1]) / Gauss_Matrix[y][y];
+          break;
+          
+          case 3:
+          Delta[y] = (Gauss_Matrix[y][6] - (Gauss_Matrix[y][(y+1)] * Delta[y+1]) - (Gauss_Matrix[y][(y+2)] * Delta[y+2])) / Gauss_Matrix[y][y];
+          break;
+          
+          case 2:
+          Delta[y] = (Gauss_Matrix[y][6] - (Gauss_Matrix[y][(y+1)] * Delta[y+1]) - (Gauss_Matrix[y][(y+2)] * Delta[y+2]) - (Gauss_Matrix[y][(y+3)] * Delta[y+3])) / Gauss_Matrix[y][y];
+          break;
+          
+          case 1:
+          Delta[y] = (Gauss_Matrix[y][6] - (Gauss_Matrix[y][(y+1)] * Delta[y+1]) - (Gauss_Matrix[y][(y+2)] * Delta[y+2]) - (Gauss_Matrix[y][(y+3)] * Delta[y+3])  - (Gauss_Matrix[y][(y+4)] * Delta[y+4])) / Gauss_Matrix[y][y];
+          break;
+          
+          case 0:
+          Delta[y] = (Gauss_Matrix[y][6] - (Gauss_Matrix[y][(y+1)] * Delta[y+1]) - (Gauss_Matrix[y][(y+2)] * Delta[y+2]) - (Gauss_Matrix[y][(y+3)] * Delta[y+3])  - (Gauss_Matrix[y][(y+4)] * Delta[y+4]) - (Gauss_Matrix[y][(y+5)] * Delta[y+5])) / Gauss_Matrix[y][y];
+          break;
+        }
+    }
+	return true;
+}
+
+// function that calibrates the accelerometer
+void 
+Acceleromter::calibrate_accelerometer(FastSerial *Port, int16_t xvector[120], int16_t yvector[120], int16_t zvector[120])
+{ 
+  // Solve for delta Matrix::
+  // Convergence Criteria -> violate loop if one of the criterion is met
+  int num_of_iterations = 20;
+  float eps             = 0.000000001;
+  float change          = 100;
+ 
+  while(num_of_iterations-- > 0 && change > eps)
+  {
+    
+    // reset all matrices  
+    reset_matrices();
+    
+    // populate matrices using beta and xraw
+    for(int i = 0; i<120; i++)
+    {
+      // xraw values
+      xraw = (float)xvector[i];
+      yraw = (float)yvector[i];
+      zraw = (float)zvector[i];
+      
+      // calculate calibration matrices   
+      update_matrices();
+    }
+     
+     // solve for delta
+     float Delta[6] = {0,0,0,0,0,0};
+     if(gauselimination_pivoting(Delta))
+     {
+       // size of change
+       change = Delta[0] * Delta[0] + Delta[1] * Delta[1] + Delta[2] * Delta[2] + Delta[3] * Delta[3]/(b4*b4) + Delta[4] * Delta[4]/(b5*b5) + Delta[5]*Delta[5]/(b6*b6);
+       
+       // adjust beta
+       b1 -= Delta[0];
+       b2 -= Delta[1];
+       b3 -= Delta[2];
+       b4 -= Delta[3];
+       b5 -= Delta[4];
+       b6 -= Delta[5];
+       
+       Port->println("offsets: ");
+       Port->print(b1);Port->print('\t');Port->print(b2);Port->print('\t');Port->print(b3);Port->print('\t');Port->print(b4);Port->print('\t');Port->print(b5);Port->print('\t');Port->print(b6);Port->println('\t');
+     }
+     else
+     {
+       Port->println("Failed");
+     }
+  }
+}
+
+const String 
+Acceleromter::serial_message(FastSerial *Port)
+{
+  
+    char c;
+    String msg = "";
+    while(!Port->available())
+    {
+      read_imu(&Serial2); // read out the imu buffer::
+    }
+    
+    while(Port->available())
+    {
+      c    = (char)Port->read();  
+      msg += c;   
+      delay(1);
+    }   
+    
+    return msg;  
+}
+
+
+void 
+Acceleromter::Sample_Processing(FastSerial *Port, byte PortNumber)
+{
+  if(PortNumber == SERIAL_OBJECT)
+  {
+    boolean break_loop = false;
+    Port->println("Options:-");
+    Port->println(". calibration");
+    Port->println(". exit");
+    while(break_loop == false)
+    {
+      String message = serial_message(Port);   // blocking function to wait on the serial port for bytes
+      if(message == "calibration")
+      {  
+         int x = 0;
+         byte samples_per_axis = 20;
+         byte number_of_axes   = 6;           // x y z -x -y -z
+         int sample_count      = number_of_axes * samples_per_axis; 
+         
+         int16_t xvector [sample_count]; 
+         int16_t yvector [sample_count];
+         int16_t zvector [sample_count]; 
+         
+         Port->println("Place vehicle level and press -z -> enter");       
+         message = serial_message(Port);                    
+         x = 0;    
+         if(message = "-z")
+         {
+            while(x < samples_per_axis*1)
+            {
+              read_imu(&Serial2);            
+              xvector[x] = _imu.xacc; 
+              yvector[x] = _imu.yacc;
+              zvector[x] = _imu.zacc;
+              Port->print(xvector[x]);  Port->print('\t');  Port->print(yvector[x]); Port->print('\t'); Port->print(zvector[x]); Port->print('\t'); Port->println(x);
+              x++;
+            }          
+         }
+         
+   
+         Port->println("Place vehicle right and press +y -> enter");          
+         message = serial_message(Port);         
+         if(message = "+y")
+         {
+            while(x < samples_per_axis*2)
+            {
+              read_imu(&Serial2);            
+              xvector[x] = _imu.xacc; 
+              yvector[x] = _imu.yacc;
+              zvector[x] = _imu.zacc;
+              Port->print(xvector[x]);  Port->print('\t');  Port->print(yvector[x]); Port->print('\t'); Port->print(zvector[x]); Port->print('\t'); Port->println(x);
+              x++;
+            }          
+         }
+        
+         Port->println("Place vehicle left and press -y -> enter");          
+         message = serial_message(Port);                       
+         if(message = "-y")
+         {
+            while(x < samples_per_axis*3)
+            {
+              read_imu(&Serial2);            
+              xvector[x] = _imu.xacc; 
+              yvector[x] = _imu.yacc;
+              zvector[x] = _imu.zacc;
+              Port->print(xvector[x]);  Port->print('\t');  Port->print(yvector[x]); Port->print('\t'); Port->print(zvector[x]); Port->print('\t'); Port->println(x);
+              x++;
+            }          
+         }
+         
+         Port->println("Place vehicle Nose Down and press +x -> enter");          
+         message = serial_message(Port);                       
+         if(message = "+x")
+         {
+            while(x < samples_per_axis*4)
+            {
+              read_imu(&Serial2);            
+              xvector[x] = _imu.xacc; 
+              yvector[x] = _imu.yacc;
+              zvector[x] = _imu.zacc;
+              Port->print(xvector[x]);  Port->print('\t');  Port->print(yvector[x]); Port->print('\t'); Port->print(zvector[x]); Port->print('\t'); Port->println(x);
+              x++;
+            }          
+         }
+         
+         Port->println("Place vehicle Nose Up and press -x -> enter");          
+         message = serial_message(Port);                       
+         if(message = "-x")
+         {
+            while(x < samples_per_axis*5)
+            {
+              read_imu(&Serial2);            
+              xvector[x] = _imu.xacc; 
+              yvector[x] = _imu.yacc;
+              zvector[x] = _imu.zacc;
+              Port->print(xvector[x]);  Port->print('\t');  Port->print(yvector[x]); Port->print('\t'); Port->print(zvector[x]); Port->print('\t'); Port->println(x);
+              x++;
+            }          
+         }
+
+         Port->println("Place vehicle upside down and press +z -> enter");          
+         message = serial_message(Port);                       
+         if(message = "+z")
+         {
+            while(x < samples_per_axis*6)
+            {
+              read_imu(&Serial2);            
+              xvector[x] = _imu.xacc; 
+              yvector[x] = _imu.yacc;
+              zvector[x] = _imu.zacc;
+              Port->print(xvector[x]);  Port->print('\t');  Port->print(yvector[x]); Port->print('\t'); Port->print(zvector[x]); Port->print('\t'); Port->println(x);
+              x++;
+            }          
+         }  
+
+         
+         // calibrate accelerometer
+         calibrate_accelerometer(&Serial, xvector, yvector, zvector);     
+      }
+      else if(message == "exit")
+      {
+        break_loop = true;
+      }
+    }
+  }
+}
+
+
+
+
+/*@ Magnetometer Class
+ *@ Created by Hery A Mwenegoha (C) 2016
+ *@ Works with SerialPort 0 as the Output window
+ *@ Might be modified to be carried out on the PC
+ */
+class Magnetometer
+{
+  public:
+  Magnetometer(){};
+  void Mag_Calibration(FastSerial *Port, byte PortNumber);
+  const String serial_message(FastSerial *Port);
+};
+
+
+const String 
+Magnetometer::serial_message(FastSerial *Port)
+{
+  
+    char c;
+    String msg = "";
+    while(!Port->available())
+    {
+      read_imu(&Serial2); // read out the imu buffer::
+    }
+    
+    while(Port->available())
+    {
+      c    = (char)Port->read();  
+      msg += c;   
+      delay(1);
+    }   
+    
+    return msg;  
+}
+
+void 
+Magnetometer::Mag_Calibration(FastSerial *Port, byte PortNumber)
+{
+  if(PortNumber == SERIAL_OBJECT)
+  {
+	boolean break_loop = false;
+	Port->println("Magnetometer Options:-");
+	Port->println(". calibration");
+	Port->println(". exit");
+	while(break_loop == false)
+	{
+	  String message = serial_message(Port);     // blocking function to wait on the serial port for bytes
+	  if(message == "calibration")
+	  { 
+		 int x = 0;   
+		 
+		 int16_t xvector = 0 ; 
+		 int16_t yvector = 0;
+		 int16_t zvector = 0; 
+		 
+		 int16_t xmin = 0;
+		 int16_t ymin = 0;
+		 int16_t zmin = 0;
+		
+		 int16_t xmax = 0;
+		 int16_t ymax = 0;
+		 int16_t zmax = 0;
+		 
+		 Port->println("Press r and Rotate Vehicle around all axes");       
+		 message = serial_message(Port);                    
+		 x = 0;    
+		 if(message = "r")
+		 {
+			while(x < 1000)
+			{
+			  read_imu(&Serial2); 
+			  
+			  xmin = xvector < xmin ? xvector : xmin; 
+			  ymin = yvector < ymin ? yvector : ymin; 
+			  zmin = zvector < zmin ? zvector : zmin; 
+			  
+			  xmax = xvector > xmax ? xvector : xmax;            
+			  ymax = yvector > ymax ? yvector : ymax;
+			  zmax = zvector > zmax ? zvector : zmax;
+			  
+			  // flip imu readings 
+			  xvector = _imu.xmag * SENSOR_SIGN[6]; 
+			  yvector = _imu.ymag * SENSOR_SIGN[7];
+			  zvector = _imu.zmag * SENSOR_SIGN[8];
+			  
+			  Port->print(xvector);  Port->print(" ");  Port->print(yvector); Port->print(" "); Port->print(zvector); Port->print(" "); 
+			  Port->print("Min");  Port->print(" ");
+			  Port->print(xmin);  Port->print(" ");  Port->print(ymin); Port->print(" "); Port->print(zmin); Port->print(" ");
+			  Port->print("Max");  Port->print(" ");
+			  Port->print(xmax);  Port->print(" ");  Port->print(ymax); Port->print(" "); Port->print(zmax); Port->print(" ");
+			  Port->println(x);
+			  x++;
+			  delay(100);
+			}          
+		  }
+		 
+		  float offsets[3] = {(float)(0.5f*(xmin + xmax)), (float)(0.5f*(ymin + ymax)), (float)(0.5f*(zmin + zmax))};
+		  float scale[3]   = {(float)(0.5f*(xmin - xmax)), (float)(0.5f*(ymin - ymax)), (float)(0.5f*(zmin - zmax))};
+		  float average    = (scale[0]+scale[1]+scale[2])/3;
+
+		  
+		  Port->println("Offsets (HardIron) Include:   ");        
+		  for(int i = 0; i< 3; i++)
+		  {
+			 Port->print(offsets[i]); Port->print('\t');
+		  }
+		  
+		  Port->println("Scales (SoftIron) Include:   ");
+		  for(int i = 0; i< 3; i++)
+		  {
+			 scale[i] = scale[i]/average; 
+			 Port->print(scale[i]); Port->print('\t');
+		  }
+		  Port->println("");    
+	  }
+	  else if(message == "exit")
+	  {
+		break_loop = true;
+	  }
+	}
+  }
+}

@@ -1,0 +1,4 @@
+Date	Latitude(deg) 	Longitude(deg)	hamsl(m)	hafl(m)	climbrate(cm/s)	GroundSpeed(m/s)	Airspeed(m/s)	Mav_Link(%)	Rssi_Link(%)	Throttle	Roll(deg)	Pitch(deg)	Yaw(deg)
+18:00:33	0	0	0	0.1602875	8.340604	0	3	96	0	50	-0.0522108	1.916083	7.928903	
+18:00:35	0	0	0	1.153894	34.02047	0	3	97	0	51	-0.0246018	1.851884	7.953554	
+18:00:37	0	0	0	0.7145609	-1.431957	0	3	98	0	52	-0.02519503	1.818333	8.099892	
