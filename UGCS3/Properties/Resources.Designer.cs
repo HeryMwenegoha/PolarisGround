@@ -63,6 +63,16 @@ namespace UGCS3.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap antenna_tracker_button {
+            get {
+                object obj = ResourceManager.GetObject("antenna_tracker_button", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap attitude_background_930x1593 {
             get {
                 object obj = ResourceManager.GetObject("attitude_background_930x1593", resourceCulture);

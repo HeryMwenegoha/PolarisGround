@@ -123,9 +123,8 @@ namespace UGCS3
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void MainView_Load(object sender, EventArgs e)
-        {
+        {            
             //Console.WriteLine(MAVLink.MAVLINK_MESSAGE_CRCS[27]);
-            Log.Log.start();
             Text = "UGCS 3";
             Size          = Screen.PrimaryScreen.WorkingArea.Size;
             WindowState = FormWindowState.Maximized;
@@ -142,8 +141,8 @@ namespace UGCS3
             // Initialise classes
             SerialPortObject = new SerialPort();
             Mavlink_Protocol = new MavLinkSerialPacketClass(SerialPortObject);
-            xplane10 = new Xplane();
-            Speech = new SpeechSynthesizer();
+            xplane10         = new Xplane();
+            Speech           = new SpeechSynthesizer();
 
             // Place any objects properly
             Setup_Controls();           
@@ -158,20 +157,19 @@ namespace UGCS3
             SettingsButton.Click += SettingsButton_Click;
             Click += MainView_Click;
 
-
             _bwWayPoints.WorkerSupportsCancellation = true;
             _bwWayPoints.WorkerReportsProgress = true;
             _bwWayPoints.DoWork += _bwWayPoints_DoWork;
             _bwWayPoints.RunWorkerCompleted += _bwWayPoints_RunWorkerCompleted;
             RadiusNumericUpDown.ValueChanged += RadiusNumericUpDown_ValueChanged;
 
-
             ReadWayPointsButton.Click += ReadWayPointsButton_Click;
             WriteWayPointsButton.Click += WriteWayPointsButton_Click;
             Do_Action_Button.Click += Do_Action_Button_Click;
             Console.WriteLine("MainView Has Shown Sucessfull ... " + DateTime.Now);
-
             //WindowState = FormWindowState.Minimized;
+
+            //Speech.SpeakAsync("Welcome, General Davis Adolf");
         }
 
 
@@ -1178,7 +1176,21 @@ namespace UGCS3
                                     Variables.cog = (float)(received_gps.cog * 1e-2);
                                     Variables.fix_type = received_gps.fix_type;
                                     Variables.numSatellites = received_gps.satellites_visible;
+                                    Variables.gps_altitude = (float)(received_gps.alt * 1e-3);
+
                                     
+                                   
+                                    float Time   = (float)received_gps.time_usec;
+
+                                    UInt64 hours   = (UInt64)Time / 100000;
+                                    UInt64 minutes = ((UInt64)Time / 1000) - (hours * 100);
+                                    byte seconds   = Convert.ToByte(((Time * 1e-3) % 1) * 100);
+                                    // DateTime current_date = new DateTime();
+                                    
+
+                                    //Console.WriteLine("Time " + received_gps.time_usec +" UTC "+hours +":"+minutes + ":" + seconds);
+                                    
+
                                     Log.Log.logwrite(Variables.latitude, Variables.longitude, Variables.hMSL, Variables.imu_altitude,  Variables.imu_climbrate,Variables.gSpeed, Variables.airspeed, Mavlink_Protocol.linkquality, Variables.link_rssi, Variables.throttle , Variables.rollDeg, Variables.pitchDeg, Variables.yawDeg);
 
                                     // Console.WriteLine("Fix " + Variables.fix_type+" Lat "+ Variables.latitude + " Lon " + Variables.longitude + " Speed "+Variables.gSpeed);
@@ -1447,6 +1459,19 @@ namespace UGCS3
 
                 case 4:
                     slow_1Hz_counter++;
+                    if (!Variables.WAITING_FOR_PARAM_LIST)
+                    {
+                        // send info to antenna tracker
+                        MAVLink.mavlink_gps_raw_int_t received_gps = new MAVLink.mavlink_gps_raw_int_t();
+                        received_gps.lat  = (Int32)(Variables.latitude * 1e7);
+                        received_gps.lon = (Int32)(Variables.longitude * 1e7);
+                        received_gps.alt = (Int32)(Variables.gps_altitude * 1e3);
+                        received_gps.fix_type = Variables.fix_type;
+                        received_gps.vel = (ushort)(Variables.gSpeed * 100);
+                        received_gps.satellites_visible = Variables.numSatellites;
+                        received_gps.cog = (ushort)(Variables.cog * 100);
+                        //SettingsCntrl.send_gps_raw_int(received_gps);
+                    }
                     break;
 
                 case 5:
@@ -1501,17 +1526,23 @@ namespace UGCS3
         List<PointLatLng> nextWPList    = new List<PointLatLng>();
         private void GmapDirection(GMap.NET.PointLatLng pt, float roll, float yaw, float cog)
         {
-            if(Variables.fix_type > 1)
+            if(Variables.fix_type > 1 && Home_Counter <10)
             {
                 Home_Counter++;
             }
 
             if((Home_Counter > 2) &&  (Home_Counter < 4))
             {
-                Settings.GPSSettings.Default.Home_Latitude = pt.Lat;
+                
+                // GPS Stuff::
+                Settings.GPSSettings.Default.Home_Latitude  = pt.Lat;
                 Settings.GPSSettings.Default.Home_Longitude = pt.Lng;
+                Settings.GPSSettings.Default.Home_Altitude  = Variables.gps_altitude; 
                 Settings.GPSSettings.Default.Save();
 
+                Console.WriteLine("Saving new home latitude and longitude");
+
+                // 
                 _HomeMarker.Position = pt;
                 gMapControl.Invalidate();
             }
@@ -2665,17 +2696,25 @@ namespace UGCS3
 
             for (int i = 0; i < WayPoint_DataGridView.Rows.Count - 1; i++)
             {
-                (WayPoint_DataGridView.Rows[i].Cells[7] as DataGridViewTextBoxCell).Value = Common.common.distance(WPCoordinates.ToArray()[i], WPCoordinates.ToArray()[i + 1], this.gMapControl);
                 float alt1 = 0, alt2 = 0;
-                if (i > 0)
+                try
                 {
-                    alt1 = float.Parse((WayPoint_DataGridView.Rows[i - 1].Cells[3] as DataGridViewTextBoxCell).Value.ToString());
-                    alt2 = float.Parse((WayPoint_DataGridView.Rows[i].Cells[3] as DataGridViewTextBoxCell).Value.ToString());
+                    (WayPoint_DataGridView.Rows[i].Cells[7] as DataGridViewTextBoxCell).Value = Common.common.distance(WPCoordinates.ToArray()[i], WPCoordinates.ToArray()[i + 1], this.gMapControl);
+                    if (i > 0)
+                    {
+                        alt1 = float.Parse((WayPoint_DataGridView.Rows[i - 1].Cells[3] as DataGridViewTextBoxCell).Value.ToString());
+                        alt2 = float.Parse((WayPoint_DataGridView.Rows[i].Cells[3] as DataGridViewTextBoxCell).Value.ToString());
+                    }
+                    else
+                    {
+                        alt2 = float.Parse((WayPoint_DataGridView.Rows[i].Cells[3] as DataGridViewTextBoxCell).Value.ToString());
+                    }
                 }
-                else
+                catch(SystemException ex)
                 {
-                    alt2 = float.Parse((WayPoint_DataGridView.Rows[i].Cells[3] as DataGridViewTextBoxCell).Value.ToString());
+                    MessageBox.Show("Alert", ex.Message);
                 }
+
                 (WayPoint_DataGridView.Rows[i].Cells[8] as DataGridViewTextBoxCell).Value = Common.common.gradient(WPCoordinates.ToArray()[i], WPCoordinates.ToArray()[i + 1], alt1, alt2, this.gMapControl);
             }
         }

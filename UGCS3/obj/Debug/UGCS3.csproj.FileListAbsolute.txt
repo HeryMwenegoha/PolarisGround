@@ -43,3 +43,4 @@ C:\Users\Hery\Dropbox\Fcs_Gcs\GroundStations(C#)\UGCS3\UGCS3\bin\Debug\AForge.Vi
 C:\Users\Hery\Dropbox\Fcs_Gcs\GroundStations(C#)\UGCS3\UGCS3\bin\Debug\AForge.Video.DirectShow.xml
 C:\Users\Hery\Dropbox\Fcs_Gcs\GroundStations(C#)\UGCS3\UGCS3\bin\Debug\GMap.NET.Core.pdb
 C:\Users\Hery\Dropbox\Fcs_Gcs\GroundStations(C#)\UGCS3\UGCS3\bin\Debug\GMap.NET.WindowsForms.pdb
+C:\Users\hery_\Dropbox\Fcs_Gcs\GroundStations(C#)\UGCS3\UGCS3\obj\Debug\UGCS3.UsableForms.Antenna_Tracker.resources

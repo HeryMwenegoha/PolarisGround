@@ -30,6 +30,16 @@
         {
             this.MainPanel = new System.Windows.Forms.Panel();
             this.GraphGroupBox = new System.Windows.Forms.GroupBox();
+            this.millisecondsLabel = new System.Windows.Forms.Label();
+            this.TimeOffsetTextBox = new System.Windows.Forms.TextBox();
+            this.panel5 = new System.Windows.Forms.Panel();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.Antenna_Connectbutton = new System.Windows.Forms.Button();
+            this.AntennaComPortcomboBox = new System.Windows.Forms.ComboBox();
+            this.DownTiltbutton = new System.Windows.Forms.Button();
+            this.RightPanbutton = new System.Windows.Forms.Button();
+            this.UpTiltbutton = new System.Windows.Forms.Button();
+            this.LeftPanbutton = new System.Windows.Forms.Button();
             this.Parameter_button = new System.Windows.Forms.Button();
             this.log_button = new System.Windows.Forms.Button();
             this.accZ_checkBox = new System.Windows.Forms.CheckBox();
@@ -92,6 +102,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.MainPanel.SuspendLayout();
             this.GraphGroupBox.SuspendLayout();
+            this.panel5.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.RadioGroupBox.SuspendLayout();
             this.ThrottleYawRadioPanel.SuspendLayout();
@@ -116,6 +128,9 @@
             // 
             // GraphGroupBox
             // 
+            this.GraphGroupBox.Controls.Add(this.millisecondsLabel);
+            this.GraphGroupBox.Controls.Add(this.TimeOffsetTextBox);
+            this.GraphGroupBox.Controls.Add(this.panel5);
             this.GraphGroupBox.Controls.Add(this.Parameter_button);
             this.GraphGroupBox.Controls.Add(this.log_button);
             this.GraphGroupBox.Controls.Add(this.accZ_checkBox);
@@ -146,10 +161,116 @@
             this.GraphGroupBox.TabStop = false;
             this.GraphGroupBox.Text = "Graph Plane";
             // 
+            // millisecondsLabel
+            // 
+            this.millisecondsLabel.AutoSize = true;
+            this.millisecondsLabel.Location = new System.Drawing.Point(506, 489);
+            this.millisecondsLabel.Name = "millisecondsLabel";
+            this.millisecondsLabel.Size = new System.Drawing.Size(84, 17);
+            this.millisecondsLabel.TabIndex = 15;
+            this.millisecondsLabel.Text = "milliseconds";
+            // 
+            // TimeOffsetTextBox
+            // 
+            this.TimeOffsetTextBox.Location = new System.Drawing.Point(434, 486);
+            this.TimeOffsetTextBox.Name = "TimeOffsetTextBox";
+            this.TimeOffsetTextBox.Size = new System.Drawing.Size(66, 22);
+            this.TimeOffsetTextBox.TabIndex = 14;
+            this.TimeOffsetTextBox.Text = "0 ";
+            this.TimeOffsetTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // panel5
+            // 
+            this.panel5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel5.Controls.Add(this.pictureBox1);
+            this.panel5.Controls.Add(this.Antenna_Connectbutton);
+            this.panel5.Controls.Add(this.AntennaComPortcomboBox);
+            this.panel5.Controls.Add(this.DownTiltbutton);
+            this.panel5.Controls.Add(this.RightPanbutton);
+            this.panel5.Controls.Add(this.UpTiltbutton);
+            this.panel5.Controls.Add(this.LeftPanbutton);
+            this.panel5.Location = new System.Drawing.Point(594, 466);
+            this.panel5.Name = "panel5";
+            this.panel5.Size = new System.Drawing.Size(303, 80);
+            this.panel5.TabIndex = 13;
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Image = global::UGCS3.Properties.Resources.antenna_tracker_button;
+            this.pictureBox1.InitialImage = global::UGCS3.Properties.Resources.antenna_tracker_button;
+            this.pictureBox1.Location = new System.Drawing.Point(99, 7);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(64, 64);
+            this.pictureBox1.TabIndex = 16;
+            this.pictureBox1.TabStop = false;
+            // 
+            // Antenna_Connectbutton
+            // 
+            this.Antenna_Connectbutton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.Antenna_Connectbutton.Location = new System.Drawing.Point(184, 43);
+            this.Antenna_Connectbutton.Name = "Antenna_Connectbutton";
+            this.Antenna_Connectbutton.Size = new System.Drawing.Size(107, 29);
+            this.Antenna_Connectbutton.TabIndex = 14;
+            this.Antenna_Connectbutton.Text = "Connect";
+            this.Antenna_Connectbutton.UseVisualStyleBackColor = true;
+            // 
+            // AntennaComPortcomboBox
+            // 
+            this.AntennaComPortcomboBox.FormattingEnabled = true;
+            this.AntennaComPortcomboBox.Location = new System.Drawing.Point(183, 5);
+            this.AntennaComPortcomboBox.Name = "AntennaComPortcomboBox";
+            this.AntennaComPortcomboBox.Size = new System.Drawing.Size(107, 24);
+            this.AntennaComPortcomboBox.TabIndex = 15;
+            // 
+            // DownTiltbutton
+            // 
+            this.DownTiltbutton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.DownTiltbutton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.DownTiltbutton.Location = new System.Drawing.Point(29, 50);
+            this.DownTiltbutton.Name = "DownTiltbutton";
+            this.DownTiltbutton.Size = new System.Drawing.Size(27, 27);
+            this.DownTiltbutton.TabIndex = 3;
+            this.DownTiltbutton.Text = "V";
+            this.DownTiltbutton.UseVisualStyleBackColor = true;
+            // 
+            // RightPanbutton
+            // 
+            this.RightPanbutton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.RightPanbutton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.RightPanbutton.Location = new System.Drawing.Point(60, 24);
+            this.RightPanbutton.Name = "RightPanbutton";
+            this.RightPanbutton.Size = new System.Drawing.Size(23, 26);
+            this.RightPanbutton.TabIndex = 2;
+            this.RightPanbutton.Text = ">";
+            this.RightPanbutton.UseVisualStyleBackColor = true;
+            // 
+            // UpTiltbutton
+            // 
+            this.UpTiltbutton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.UpTiltbutton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.UpTiltbutton.Location = new System.Drawing.Point(29, 4);
+            this.UpTiltbutton.Name = "UpTiltbutton";
+            this.UpTiltbutton.Size = new System.Drawing.Size(27, 25);
+            this.UpTiltbutton.TabIndex = 1;
+            this.UpTiltbutton.Text = "Λ";
+            this.UpTiltbutton.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.UpTiltbutton.UseVisualStyleBackColor = true;
+            // 
+            // LeftPanbutton
+            // 
+            this.LeftPanbutton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LeftPanbutton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.LeftPanbutton.Location = new System.Drawing.Point(3, 25);
+            this.LeftPanbutton.Name = "LeftPanbutton";
+            this.LeftPanbutton.Size = new System.Drawing.Size(23, 25);
+            this.LeftPanbutton.TabIndex = 0;
+            this.LeftPanbutton.Text = "<";
+            this.LeftPanbutton.UseVisualStyleBackColor = true;
+            // 
             // Parameter_button
             // 
             this.Parameter_button.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.Parameter_button.Location = new System.Drawing.Point(593, 519);
+            this.Parameter_button.Location = new System.Drawing.Point(308, 486);
             this.Parameter_button.Name = "Parameter_button";
             this.Parameter_button.Size = new System.Drawing.Size(101, 27);
             this.Parameter_button.TabIndex = 12;
@@ -809,6 +930,8 @@
             this.MainPanel.ResumeLayout(false);
             this.GraphGroupBox.ResumeLayout(false);
             this.GraphGroupBox.PerformLayout();
+            this.panel5.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.RadioGroupBox.ResumeLayout(false);
@@ -894,5 +1017,15 @@
         public System.Windows.Forms.TextBox BatteryVoltageTextBox;
         public System.Windows.Forms.TextBox BatteryGainTextBox;
         public System.Windows.Forms.TextBox BatteryAnalogTextBox;
+        private System.Windows.Forms.Panel panel5;
+        private System.Windows.Forms.PictureBox pictureBox1;
+        public System.Windows.Forms.Button Antenna_Connectbutton;
+        public System.Windows.Forms.Button DownTiltbutton;
+        public System.Windows.Forms.Button RightPanbutton;
+        public System.Windows.Forms.Button UpTiltbutton;
+        public System.Windows.Forms.Button LeftPanbutton;
+        public System.Windows.Forms.ComboBox AntennaComPortcomboBox;
+        private System.Windows.Forms.Label millisecondsLabel;
+        private System.Windows.Forms.TextBox TimeOffsetTextBox;
     }
 }

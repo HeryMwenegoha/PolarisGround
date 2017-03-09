@@ -10,14 +10,19 @@ namespace UGCS3.Log
 {
     public static class Log
     {
-        public static string _file_path= "";
+        public static string _file_path  = "";
         public static string _param_path = "";
-        public static void start()
+
+        public static void log_console()
         {
-         
-            string filepath= Application.StartupPath;
+
+        }
+
+        public static void start()
+        {         
+            string filepath = Application.StartupPath;
             // Folder
-            string folder = filepath + Path.DirectorySeparatorChar + "Logs";
+            string folder   = filepath + Path.DirectorySeparatorChar + "Logs";
             if (!Directory.Exists(folder))
             {
                 Directory.CreateDirectory(folder);
@@ -56,9 +61,15 @@ namespace UGCS3.Log
             }
         }
 
-
+        static bool log_started = false;
         public static void logwrite(float lat, float lon, float hasl, float altitude, float climbrate, float gspeed, float airspeed, float mav_link, float rssi_link,  float throttle,  float roll, float pitch, float yaw)
         {
+            if (log_started == false)
+            {
+                start();                // start the log directory
+                log_started = true;     // only do once
+            }
+
             if (!File.Exists(_file_path))
             {
                 return;

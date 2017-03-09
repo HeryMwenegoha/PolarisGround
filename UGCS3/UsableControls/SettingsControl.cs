@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using System.IO;
+using System.IO.Ports;
 using ZedGraph;
 using UGCS3.Common;
 using System.Windows.Media.Imaging;
@@ -19,10 +20,103 @@ using System.Windows.Media.Imaging;
 using AForge;
 using AForge.Video.DirectShow;
 
+
 namespace UGCS3.UsableControls
 {
     public partial class SettingsControl : UserControl
     {
+        private void AntennaComPortcomboBox_MouseEnter(object sender, EventArgs e)
+        {
+            AntennaComPortcomboBox.Items.Clear();
+            AntennaComPortcomboBox.Items.Add("Select Port");
+            AntennaComPortcomboBox.Items.AddRange(SerialPort.GetPortNames());
+            AntennaComPortcomboBox.SelectedIndex = 0;
+        }
+         
+
+  
+        private void Antenna_Connectbutton_Click(object sender, EventArgs e)
+        {
+            if (AntennaComPortcomboBox.Text == "" || AntennaComPortcomboBox.Text == ("Select Port"))
+            {
+                MessageBox.Show("Invalid Comport");
+                return;
+            }
+
+            try
+            {
+                if (Antenna_Connectbutton.Text == "Connect")
+                {
+
+                    if (_serialport.IsOpen)
+                    {
+                        MessageBox.Show("This Comport Cannot be used");
+                        return;
+                    }
+
+                    _serialport.BaudRate = 38400;
+                    _serialport.PortName = AntennaComPortcomboBox.Text;
+                    _serialport.Open();
+
+                    AntennaComPortcomboBox.Enabled = false;
+                    Antenna_Connectbutton.Text = "Disconnect";
+                }
+                else if (Antenna_Connectbutton.Text == "Disconnect")
+                {
+                    if (_serialport.IsOpen)
+                    {
+                        _serialport.Close();
+                        Antenna_Connectbutton.Text = "Connect";
+                        AntennaComPortcomboBox.Enabled = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+
+        public void send_gps_raw_int(MAVLink.mavlink_gps_raw_int_t gps_message)
+        {
+            Mavlink_Protocol.sendPacket(gps_message);
+        }
+
+ 
+        private void RightPanbutton_Click(object sender, EventArgs e)
+        {
+            MAVLink.mavlink_local_position_ned_t msg_ned = new MAVLink.mavlink_local_position_ned_t();
+            msg_ned.x = 10;
+            Mavlink_Protocol.sendPacket(msg_ned);
+        }
+
+        private void LeftPanbutton_Click(object sender, EventArgs e)
+        {
+            MAVLink.mavlink_local_position_ned_t msg_ned = new MAVLink.mavlink_local_position_ned_t();
+            msg_ned.x = -10;
+            Mavlink_Protocol.sendPacket(msg_ned);
+        }
+
+        private void UpTiltbutton_Click(object sender, EventArgs e)
+        {
+            MAVLink.mavlink_local_position_ned_t msg_ned = new MAVLink.mavlink_local_position_ned_t();
+            msg_ned.y = 10;
+            Mavlink_Protocol.sendPacket(msg_ned);
+        }
+
+        private void DownTiltbutton_Click(object sender, EventArgs e)
+        {
+            MAVLink.mavlink_local_position_ned_t msg_ned = new MAVLink.mavlink_local_position_ned_t();
+            msg_ned.y = -10;
+            Mavlink_Protocol.sendPacket(msg_ned);
+        }
+
+
+
+        public SerialPort _serialport;
+        string[] portnames = new string[100];
+        MavLinkSerialPacketClass Mavlink_Protocol;
         public SettingsControl()
         {
             DoubleBuffered = true;
@@ -36,6 +130,20 @@ namespace UGCS3.UsableControls
 
             Load += SettingsControl_Load;
             Disposed += SettingsControl_Disposed;
+
+            _serialport        = new SerialPort();
+            Mavlink_Protocol = new MavLinkSerialPacketClass(_serialport);
+
+            portnames   = SerialPort.GetPortNames();
+            AntennaComPortcomboBox.Items.Add("Select Port");
+            AntennaComPortcomboBox.Items.AddRange(portnames);
+            AntennaComPortcomboBox.SelectedIndex = 0;
+            AntennaComPortcomboBox.MouseEnter += AntennaComPortcomboBox_MouseEnter;
+            Antenna_Connectbutton.Click += Antenna_Connectbutton_Click;
+            RightPanbutton.Click += RightPanbutton_Click;
+            LeftPanbutton.Click += LeftPanbutton_Click;
+            UpTiltbutton.Click += UpTiltbutton_Click;
+            DownTiltbutton.Click += DownTiltbutton_Click;
             
             // Pitch
             PitchProgressBar = new VerticalProgressBar();
@@ -159,7 +267,7 @@ namespace UGCS3.UsableControls
             camera_button.Click += camera_button_Click;
             camera_comboBox.MouseEnter += camera_comboBox_MouseEnter;
             
-            //log_button.Click += log_button_Click;
+            log_button.Click += log_button_Click;
 
             video_devices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
             final_video = new VideoCaptureDevice();
@@ -274,17 +382,117 @@ namespace UGCS3.UsableControls
             }
         }
 
+        private void log_button_Click(object sender, EventArgs e)
+        {
+#if TEST1
+            FolderBrowserDialog openFld = new FolderBrowserDialog();
+            if (openFld.ShowDialog() == DialogResult.OK)
+            {
+                if (DialogResult.Cancel == MessageBox.Show("This action will process the metadata information in your images", "Information", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk))
+                { return; }
+                string[,] pic_data = new string[1000, 2];
+                string path = openFld.SelectedPath;
+                string[] files = Directory.GetFiles(path);
+                int len = files.Length;
+                for (int ic = 0; ic < files.Length; ic++)
+                {
+                    pic_data[ic, 0] = files[ic]; // unique path to image file 
+                    pic_data[ic, 1] = "FALSE";   // means not geottages
+                }
+
+
+                for (int i = 0; i < len; i++)
+                {
+                    if (pic_data[i, 0].EndsWith(".jpg") || pic_data[i, 0].EndsWith(".JPG") || pic_data[i, 0].EndsWith(".png") || pic_data[i, 0].EndsWith(".PNG"))
+                    {
+                        using (FileStream fs = new FileStream(pic_data[i, 0], FileMode.Open, FileAccess.ReadWrite))
+                        {
+                            Image image = new Bitmap(fs);
+                            if (image.PropertyIdList.Contains(36867) && image.PropertyIdList.Contains(1) && image.PropertyIdList.Contains(2))
+                            {
+                                PropertyItem propItem_ref = image.GetPropertyItem(1);
+                                PropertyItem propItem_lat = image.GetPropertyItem(2);
+                                PropertyItem propTime = image.GetPropertyItem(36867);
+
+                                string datetime = ASCIIEncoding.ASCII.GetString(propTime.Value);
+                                string[] dates = datetime.Split(' ');
+                                string date = dates[0];
+                                string time = dates[1];
+                                //DateTime myDate = DateTime.ParseExact(dates[0], "yyyy:MM:dd", System.Globalization.CultureInfo.InvariantCulture);
+                                DateTime picTime = Convert.ToDateTime(time);
+
+                                Console.WriteLine(picTime);
+
+                            }
+                        }
+                    }
+                }
+            }
+#endif
+
+#if !TEST2
+            FolderBrowserDialog openFld = new FolderBrowserDialog();
+            if (openFld.ShowDialog() == DialogResult.OK)
+            {
+                if (DialogResult.Cancel == MessageBox.Show("This action will process the metadata information in your images", "Information", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk))
+                { return; }
+                string[,] pic_data = new string[1000, 2];
+                string path = openFld.SelectedPath;
+                string[] files = Directory.GetFiles(path);
+                int len = files.Length;
+                for (int ic = 0; ic < files.Length; ic++)
+                {
+                    pic_data[ic, 0] = files[ic]; // unique path to image file 
+                    pic_data[ic, 1] = "FALSE";   // means not geottages
+                }
+
+                for (int i = 0; i < len; i++)
+                {
+                    if (pic_data[i, 0].EndsWith(".jpg") || pic_data[i, 0].EndsWith(".JPG") || pic_data[i, 0].EndsWith(".png") || pic_data[i, 0].EndsWith(".PNG"))
+                    {
+
+                        using (FileStream fs = new FileStream(pic_data[i, 0], FileMode.Open, FileAccess.ReadWrite))
+                        {
+                            //Image image = new Bitmap(fs);
+                            using (Image image = Image.FromStream(fs))
+                            {
+                                if (image.PropertyIdList.Contains(36867) && image.PropertyIdList.Contains(1) && image.PropertyIdList.Contains(2))
+                                {
+                                    //Console.WriteLine("Processing..." + pic_data[i, 0]);
+
+                                    PropertyItem propItem_ref = image.GetPropertyItem(1);
+                                    PropertyItem propItem_lat = image.GetPropertyItem(2);
+                                    PropertyItem propTime = image.GetPropertyItem(36867);
+
+
+                                    double gps_lat = ExifGpsToDouble(propItem_ref, propItem_lat);
+                                    //double gps_lat = ExifGpsToDouble(propItem_ref, propItem_lat);
+                                    string Time    = ExifTimeToDouble(propTime);
+                                    Console.WriteLine(gps_lat);
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+
+            }
+#endif
+        }
+
 
         Int32 count        = 0;
         /// <summary>
         /// Opens up the log file and creates a string array of time, lat,lon and a count on the number of log data available.
         /// </summary>
         /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private string[,] log_button_Click(object sender, EventArgs e)
+        /// <param name="e">     </param>
+        string logname = "";
+        private string[,] log_information(object sender, EventArgs e)
         {
             OpenFileDialog openFld = new OpenFileDialog();
-            string[,] log_data     = new string[10000, 4];          // more than 30 minutes worth of data.
+            string[,] log_data     = new string[30000, 5];          // more than 30 minutes worth of data.
             string filepath        = Application.StartupPath + Path.DirectorySeparatorChar + "Logs";
             if (!Directory.Exists(filepath))
             {
@@ -294,6 +502,7 @@ namespace UGCS3.UsableControls
             if (openFld.ShowDialog() == DialogResult.OK)
             {
                 string file = openFld.FileName;
+                logname     = openFld.SafeFileName; // does  not include path but has the extension
                 if (file.EndsWith(".dat") || file.EndsWith(".txt"))
                 {
 
@@ -317,30 +526,43 @@ namespace UGCS3.UsableControls
                     }
 
                     Console.WriteLine("Log Length: " + count);
-                    if (count > 10000)
+
+                    if (count > 30000)
                     {
                         return null;
                     }
-                    count = 0;
-                    read  = false;
-                    while((line = sr.ReadLine()) != null)
+                }
+
+
+                using (StreamReader sr = new StreamReader(openFld.OpenFile()))
+                {
+                    string line;
+                    bool read = false;
+                    count     = 0;
+                    while ((line = sr.ReadLine()) != null)
                     {
-                        if (read == true)   
+                        if (read == true)
                         {
                             string[] data = line.Split('\t');
                             log_data[count, 0] = data[0]; // date
                             log_data[count, 1] = data[1]; // lat
                             log_data[count, 2] = data[2]; // lon
                             log_data[count, 3] = "FALSE"; // Inidicated Data hasn't been read
+                            log_data[count, 4] = data[3]; // Inidicated Data hasn't been read
                             count++;
                         }
-                        read = true;   
+                        read = true;
                     }
                 }
 
+
+
             }
+
+            Console.WriteLine("Log data read successfully "+count);
             return log_data;
         }
+
      
 
         /// <summary>
@@ -352,7 +574,7 @@ namespace UGCS3.UsableControls
         {
             // load images get dates and times
             // get log data 
-            string[,] log_data = log_button_Click( sender,  e);
+            string[,] log_data = log_information(sender, e);
 
             if (log_data == null){
                 MessageBox.Show("Data is either above the specified limits or corrupted", "Alert");
@@ -364,10 +586,12 @@ namespace UGCS3.UsableControls
             {
                 if (DialogResult.Cancel == MessageBox.Show("This action will process the metadata information in your images", "Information", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk))
                 { return; }
-                string[,] pic_data  = new string[1000, 2];
+                string[,] pic_data  = new string[30000, 2];
                 string path         = openFld.SelectedPath;
                 string [] files     = Directory.GetFiles(path);
                 int len             = files.Length;
+
+
                 for (int ic         = 0; ic < files.Length; ic++)
                 {   
                     pic_data[ic, 0] = files[ic]; // unique path to image file 
@@ -375,7 +599,7 @@ namespace UGCS3.UsableControls
                 }   
                    
 #if !APP1             
-                DateTime[] logTime      = new DateTime[10000];
+                DateTime[] logTime      = new DateTime[30000];
                 for (int r = 0; r < count; r++)
                 {
                     logTime[r] = Convert.ToDateTime(log_data[r, 0]);
@@ -386,22 +610,41 @@ namespace UGCS3.UsableControls
                 { 
                    if (pic_data[i, 0].EndsWith(".jpg") || pic_data[i, 0].EndsWith(".JPG") || pic_data[i, 0].EndsWith(".png") || pic_data[i, 0].EndsWith(".PNG")) 
                    {
+                        
                         using (FileStream fs = new FileStream(pic_data[i, 0], FileMode.Open, FileAccess.ReadWrite))
                         {
-                            Image image = new Bitmap(fs);
-                            if (image.PropertyIdList.Contains(36867) && image.PropertyIdList.Contains(1) && image.PropertyIdList.Contains(2))
+                            //Image image = new Bitmap(fs);
+                            using(Image image = Image.FromStream(fs))
                             {
-                                PropertyItem propItem_ref = image.GetPropertyItem(1);
-                                PropertyItem propItem_lat = image.GetPropertyItem(2);
+                            if (image.PropertyIdList.Contains(36867))// && image.PropertyIdList.Contains(1) && image.PropertyIdList.Contains(2))
+                            {
+                                //PropertyItem propItem_ref = image.GetPropertyItem(1);
+                                //PropertyItem propItem_lat = image.GetPropertyItem(2);
                                 PropertyItem propTime     = image.GetPropertyItem(36867);
 
                                 string datetime = ASCIIEncoding.ASCII.GetString(propTime.Value);
                                 string[] dates  = datetime.Split(' ');
-                                string date     = dates[0];
-                                string time     = dates[1];
-                                //DateTime myDate = DateTime.ParseExact(dates[0], "yyyy:MM:dd", System.Globalization.CultureInfo.InvariantCulture);
+                                string date = "", time = "";
+
+                                if (dates.Length > 0)
+                                    date = dates[0];
+                                if(dates.Length > 1)
+                                    time  = dates[1];
+                                
+                                if(string.IsNullOrEmpty(date) || string.IsNullOrEmpty(time))
+                                    continue;
+                             
+                                // DateTime myDate = DateTime.ParseExact(dates[0], "yyyy:MM:dd", System.Globalization.CultureInfo.InvariantCulture);
                                 DateTime picTime = Convert.ToDateTime(time);
-                              
+
+                                Int32 offset_millis = 0;
+                                Int32.TryParse(TimeOffsetTextBox.Text, out offset_millis);
+                                picTime = picTime.AddMilliseconds(offset_millis);
+
+                                // picTime = picTime.AddMinutes(-235 + 6);
+
+                                Console.Write("Processing..." + (i +1)+ "/" + len + "       ");// + pic_data[i, 0]);
+                                Console.WriteLine(datetime + "      " + date + "      " + picTime.ToLongTimeString());  
 #if !APP1                       
                                 // For every log time go through this picture:
                                 for (int index = 0; index < count; index++)
@@ -409,11 +652,13 @@ namespace UGCS3.UsableControls
                                     if (log_data[index, 3] == "TRUE")
                                         continue;
 
+                                 
                                     if (picTime.Hour == logTime[index].Hour && picTime.Minute == logTime[index].Minute && picTime.Second == logTime[index].Second)
                                     {
+                                        Console.WriteLine("Processing..." + "       " + picTime + "      " + logTime[index]);
 
-                                        float latitude = 0, longitude = 0;
-                                        if (!float.TryParse(log_data[index, 1], out latitude) || !float.TryParse(log_data[index, 2], out longitude))
+                                        float latitude = 0, longitude = 0, altitude = 0;
+                                        if (!float.TryParse(log_data[index, 1], out latitude) || !float.TryParse(log_data[index, 2], out longitude) || !float.TryParse(log_data[index, 4], out altitude))
                                         {
                                             Console.WriteLine("SettingsControl: Log_data either longitude or latitude can't be converted to float");
                                             break; 
@@ -428,16 +673,63 @@ namespace UGCS3.UsableControls
                                         refLatitude.Value  = refLat(latitude);                                      
                                         image.SetPropertyItem(refLatitude);
 
-
-                                        var gpsLatitude  = (PropertyItem)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(PropertyItem));
-                                        gpsLatitude.Id   = 0x0002;
-                                        gpsLatitude.Type = 5;
-                                        gpsLatitude.Len  = 3;
+                                        var gpsLatitude    = (PropertyItem)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(PropertyItem));
+                                        gpsLatitude.Id     = 0x0002;
+                                        gpsLatitude.Type   = 5;
+                                        gpsLatitude.Len    = (int)ddmmss(latitude).LongLength;
+                                        gpsLatitude.Value  = ddmmss(latitude);
                                         image.SetPropertyItem(gpsLatitude);
 
-                                        string GeotaggedFile = Environment.CurrentDirectory + Path.DirectorySeparatorChar +  "Geottaged" + Path.DirectorySeparatorChar + "Geo_" + index;
+                                        var refLongitude = (PropertyItem)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(PropertyItem));
+                                        refLongitude.Id = 0x0003;
+                                        refLongitude.Type = 2;
+                                        refLongitude.Len = 2;
+                                        refLongitude.Value = refLon(longitude);
+                                        image.SetPropertyItem(refLongitude);
+
+                                        var gpsLongitude = (PropertyItem)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(PropertyItem));
+                                        gpsLongitude.Id = 0x0004;
+                                        gpsLongitude.Type = 5;
+                                        gpsLongitude.Len = (int)ddmmss(longitude).LongLength;
+                                        gpsLongitude.Value = ddmmss(longitude);
+                                        image.SetPropertyItem(gpsLongitude);
+
+                                        // Reference altitude
+                                        var refaltitude   = (PropertyItem)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(PropertyItem));
+                                        refaltitude.Id    = 0x0005;
+                                        refaltitude.Type  = 1;
+                                        refaltitude.Len   = Alt_Buffer(Settings.GPSSettings.Default.Home_Altitude).Length;
+                                        refaltitude.Value = Alt_Buffer(Settings.GPSSettings.Default.Home_Altitude);
+                                        image.SetPropertyItem(refaltitude);
+
+                                        // Actual altitude
+                                        var gpsaltitude   = (PropertyItem)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(PropertyItem));
+                                        gpsaltitude.Id    = 0x0006;
+                                        gpsaltitude.Type  = 10;
+                                        gpsaltitude.Len   = Alt_GPS(altitude).Length;
+                                        gpsaltitude.Value = Alt_GPS(altitude);
+                                        image.SetPropertyItem(gpsaltitude);
+
+                                        string geottaged_Dir      = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "Geottaged";
+
+                                        string geottaged_Dir_desk = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + Path.DirectorySeparatorChar + "Geottaged";
+
+                                        string GeotaggedFile = geottaged_Dir+ Path.DirectorySeparatorChar + "Geo_" + index + ".JPG";
+                                        string GeotaggedFile_Desk = geottaged_Dir_desk + Path.DirectorySeparatorChar + "Geo_" + index + ".JPG";
+
+                                        if (!Directory.Exists(geottaged_Dir_desk))
+                                        {
+                                            Directory.CreateDirectory(geottaged_Dir_desk);
+                                        }
+
+                                        if(!Directory.Exists(GeotaggedFile))
+                                        {
+                                            Directory.CreateDirectory(geottaged_Dir);
+                                        }
                                         image.Save(GeotaggedFile);
-                                        //image.Save();
+                                        image.Save(GeotaggedFile_Desk);
+
+                                        Console.WriteLine("Successful Geottagging: " + GeotaggedFile);
                                         break;
                                     }
                                 }
@@ -449,14 +741,46 @@ namespace UGCS3.UsableControls
                                 //Console.WriteLine(gps_lat);
                             }
                         }
+                        }
                     }
                 }
             }
         }
 
+        
+        private byte[] Alt_Buffer(float altitude){
+
+            Int32 alt = Convert.ToInt32(altitude);
+
+            Int32[] buffer_int = new Int32[] { alt };
+
+            byte[] buffer = new byte[buffer_int.Length * sizeof(Int32)];
+
+            Buffer.BlockCopy(buffer_int, 0, buffer, 0, buffer_int.Length * sizeof(Int32));
+
+            return buffer;
+        }
+
+
+        private byte[] Alt_GPS(float altitude)
+        {
+
+            Int32 alt = Convert.ToInt32(altitude);
+
+            Int32[] buffer_int = new Int32[] { alt , 1};
+
+            byte[] buffer = new byte[buffer_int.Length * sizeof(Int32)];
+
+            Buffer.BlockCopy(buffer_int, 0, buffer, 0, buffer_int.Length * sizeof(Int32));
+
+            return buffer;
+        }
+         
+
 
         private byte[] refLat(float lat)
         {
+           
             string _ref = "";
             if (lat < 0)
                 _ref = "S";
@@ -485,6 +809,7 @@ namespace UGCS3.UsableControls
         {
            // string _ref = "";
 
+#if OLD
             if (angle < -180.0)
                 angle += 360.0F;
 
@@ -504,31 +829,33 @@ namespace UGCS3.UsableControls
 
             int minute  = (int)Math.Floor(seconds / 60.0) % 60;
 
-            byte[] _ref = new byte[3];
 
-            //Convert.ToByte(_ref,2);
+            int denoms = 1;
+            int[] _ref_ui = new[] { degrees, denoms, minute, denoms, second, denoms };
+            byte[] _ref = new byte[_ref_ui.Length * sizeof(UInt32)];
+            Buffer.BlockCopy(_ref_ui, 0, _ref, 0, _ref_ui.Length * sizeof(UInt32));
 
-            //Convert.ToByte(degrees, 2);
-
-            // degrees = degrees + ;
-
-            _ref[0] = Convert.ToByte(degrees);
-
-            BitConverter.GetBytes((UInt32)degrees);
-
-           // BitArray b = new BitArray();
-
-
-            BitmapMetadata mtd = new BitmapMetadata("png");
-           // mtd.Location
-
-           // Bitmap img = new Bitmap(new Image());
-          
             return _ref;
+#else
+            var d = (UInt32)Math.Abs(angle);
+            var m = Math.Abs((angle % 1) * 60);
+            var s = (m % 1) * 60;
+
+            //Console.WriteLine(d +"      "+ m + "    "+s);
+
+            var denoms       = (UInt32)1;
+            UInt32[] _ref_ui =  new[] { d, denoms, (UInt32)m ,(UInt32)(denoms), (UInt32)(s*1e7), (UInt32)(denoms * 1e7)};
+            byte[] _ref      = new byte[_ref_ui.Length * sizeof(UInt32)];
+            Buffer.BlockCopy(_ref_ui, 0, _ref, 0, _ref_ui.Length * sizeof(UInt32));
+
+            return _ref;
+#endif
+            //byte[] //BitConverter.GetBytes((UInt32)degrees);
         }
 
         private static double ExifGpsToDouble(PropertyItem propItemRef, PropertyItem propItem)
         {
+           
             double degreesNumerator = BitConverter.ToUInt32(propItem.Value, 0);
             double degreesDenominator = BitConverter.ToUInt32(propItem.Value, 4);
             double degrees = degreesNumerator / (double)degreesDenominator;

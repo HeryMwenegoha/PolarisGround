@@ -58,7 +58,7 @@ namespace UGCS3
 
         }
 
-        public static float latitude, longitude, hMSL, gSpeed, heading, airspeed, throttle, cog, vfr_groundspeed;
+        public static float latitude, longitude, hMSL, gSpeed, heading, airspeed, throttle, cog, vfr_groundspeed, gps_altitude;
 
         private static byte UAV_ID = 1;
 

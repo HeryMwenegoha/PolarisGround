@@ -150,6 +150,12 @@
     <Compile Include="UsableControls\WayPointControl.Designer.cs">
       <DependentUpon>WayPointControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="UsableForms\Antenna_Tracker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UsableForms\Antenna_Tracker.Designer.cs">
+      <DependentUpon>Antenna_Tracker.cs</DependentUpon>
+    </Compile>
     <Compile Include="UsableForms\ParameterForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -182,6 +188,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UsableControls\WayPointControl.resx">
       <DependentUpon>WayPointControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UsableForms\Antenna_Tracker.resx">
+      <DependentUpon>Antenna_Tracker.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UsableForms\ParameterForm.resx">
       <DependentUpon>ParameterForm.cs</DependentUpon>
@@ -251,6 +260,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="INS_Calibration\CalibrationArduino.txt" />
+    <None Include="Resources\antenna_tracker_button.png" />
     <None Include="Resources\plan_mission_status_off%2850x50%29.png" />
     <None Include="Resources\plan_mission_status_on%2850x50%29.png" />
     <None Include="Resources\plan_mission+new.fw%2864x64%29.fw1.png" />

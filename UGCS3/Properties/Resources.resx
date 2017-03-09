@@ -169,4 +169,7 @@
   <data name="plan_mission_status_on_50x50_" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\plan_mission_status_on(50x50).png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="antenna_tracker_button" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\antenna_tracker_button.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>
