@@ -488,6 +488,7 @@ namespace UGCS3.UsableControls
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e">     </param>
+        /// FORMAT: DATE    LATITUDE    LONGITUDE   HAMSL  HAFL CLMRATE GSPEED  ASPEED  MAV%    RSSI%   THROTTLE    ROLLDEG PITCHDEG    YAWDEG
         string logname = "";
         private string[,] log_information(object sender, EventArgs e)
         {
@@ -561,6 +562,28 @@ namespace UGCS3.UsableControls
 
             Console.WriteLine("Log data read successfully "+count);
             return log_data;
+        }
+
+        
+        public List<GMap.NET.PointLatLng> plotLatLng_button_Clicked(object sender, EventArgs e)
+        {
+            string[,] log_data = log_information(sender, e);
+
+            if (log_data == null)
+            {
+                MessageBox.Show("Data is either above the specified limits or corrupted", "Alert");
+                return null;
+            }
+
+            List<GMap.NET.PointLatLng> points = new List<GMap.NET.PointLatLng>();
+
+           
+            for (Int32 i = 0; i < count; i++)
+            {
+                points.Add(new GMap.NET.PointLatLng(Convert.ToDouble(log_data[i, 1]), Convert.ToDouble(log_data[i, 2])));
+            }
+
+            return points;
         }
 
      

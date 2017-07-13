@@ -20,7 +20,7 @@ namespace UGCS3.UsableControls
         public Dictionary<string, NumericUpDown> paramter_dictionary = new Dictionary<string, NumericUpDown>();
         public List<int> changed_indecies_list = new List<int>();
         //List<NumericUpDown> list_numeric = new List<NumericUpDown>();
-        public void Add_Rows(ushort index, string paramid, float paramvalue, int decimalplaces, float increment, float min, float max)
+        public void Add_Rows(ushort index, string paramid, float paramvalue, int decimalplaces, float increment, float min, float max, byte type)
         {
             Panel newP = new Panel();
             Label newL = new Label();
@@ -38,14 +38,71 @@ namespace UGCS3.UsableControls
             newL.ForeColor = ParamNameLabel.ForeColor;
             newP.Controls.Add(newL);
 
-            numeric.Size = numericUpDown1.Size;
-            numeric.Location = numericUpDown1.Location;
-            numeric.Minimum = (decimal)min;
-            numeric.Maximum = (decimal)max;
-            numeric.Increment = (decimal)increment;
-            numeric.Value = (decimal)paramvalue;
-            numeric.DecimalPlaces = decimalplaces;
+            numeric.Size        = numericUpDown1.Size;
+            numeric.Location    = numericUpDown1.Location;
+            numeric.Minimum     = (decimal)min;
+            numeric.Maximum     = (decimal)max;
+
+            switch(type)
+            {
+
+                case (byte)MAVLink.MAV_PARAM_TYPE.REAL64:
+                    numeric.Increment = (decimal)increment;
+                    numeric.Value = (decimal)paramvalue;
+                    numeric.DecimalPlaces = decimalplaces;
+                    break;
+
+                case 0:
+                    numeric.Increment = (decimal)increment;
+                    numeric.Value = (decimal)paramvalue;
+                    numeric.DecimalPlaces = decimalplaces;
+                    
+                    break;
+
+                case (byte)MAVLink.MAV_PARAM_TYPE.INT16:
+                    numeric.Increment = 1;
+                    numeric.Value     = (decimal)paramvalue;
+                    numeric.DecimalPlaces = 0;
+                    break;
+
+                case (byte)MAVLink.MAV_PARAM_TYPE.UINT16:
+                    numeric.Increment = 1;
+                    numeric.Value = (decimal)paramvalue;
+                    numeric.DecimalPlaces = 0;
+                    break;
+
+                case (byte)MAVLink.MAV_PARAM_TYPE.INT8:
+                    numeric.Increment = 1;
+                    numeric.Value = (decimal)paramvalue;
+                    numeric.DecimalPlaces = 0;
+                    if (paramid.Contains("REV") && paramid.Contains("SIG"))
+                    {
+                        numeric.Minimum = -1;
+                        numeric.Maximum =  1;
+                    }
+                    break;
+
+                case (byte)MAVLink.MAV_PARAM_TYPE.UINT8:
+                    numeric.Increment = 1;
+                    numeric.Value = (decimal)paramvalue;
+                    numeric.DecimalPlaces = 0;
+                    break;
+
+                case (byte)MAVLink.MAV_PARAM_TYPE.INT32:
+                    numeric.Increment = 1;
+                    numeric.Value = (decimal)paramvalue;
+                    numeric.DecimalPlaces = 0;
+                    break;
+
+                case (byte)MAVLink.MAV_PARAM_TYPE.UINT32:
+                    numeric.Increment = 1;
+                    numeric.Value = (decimal)paramvalue;
+                    numeric.DecimalPlaces = 0;
+                    break;
+
+             }
             newP.Controls.Add(numeric);
+           
                 
             // add a list of numerics
             //list_numeric.Add(numeric);

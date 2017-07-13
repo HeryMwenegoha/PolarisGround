@@ -24,10 +24,8 @@ namespace UGCS3.Map
         Pen cogPen = new Pen(Brushes.Green, 2);
         Pen nextWPPen = new Pen(Brushes.Yellow, 2);
         
-
         public GMapDirectionMarker(PointLatLng pt, float _yaw, float _roll, Bitmap bmp):base(pt)
-        {
-          
+        {        
             this._bitmap = bmp;
             this.Size = new Size(_bitmap.Width, _bitmap.Height);
             this.Offset = new Point(-Size.Width / 2, -Size.Height / 2);

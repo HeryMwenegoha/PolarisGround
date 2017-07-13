@@ -8,6 +8,8 @@ namespace UGCS3
 {
     static class Program
     {
+        // GoogleMaps API
+        // AIzaSyD4BkAWzWCMyt4L8tSWOP9G4q2QFAbWyxQ
         /// <summary>
         /// The main entry point for the application.
         /// </summary>

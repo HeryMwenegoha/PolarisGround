@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define VS2015
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -9,7 +10,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.Speech.Synthesis;
 
-using System.Drawing.Drawing2D;
+//using System.Drawing.Drawing2D;
 using System.IO.Ports;
 using GMap.NET.WindowsForms;
 using GMap.NET.MapProviders;
@@ -26,33 +27,55 @@ using UGCS3.Settings;
 using UGCS3.Log;
 using UGCS3.Common;
 
+using System.Web;
+
+using System.Net;
+
 namespace UGCS3
 {
     public partial class MainView:Form
     {
+        // Custom mavlink Here...
+        // GoogleMaps API
+        // AIzaSyD4BkAWzWCMyt4L8tSWOP9G4q2QFAbWyxQ
         /*
          * Remove Global.cs Form if the form doesnt cause any problems after operating a couple of times.
-         */ 
+         */
+        // MainForm is used to handle waypoint data grid view as well as all other waypointing functions
+        Form Main_Form;
+
+
         public MainView()
         {
             DoubleBuffered = true;
-            SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-            SetStyle(ControlStyles.ResizeRedraw, true);
-            SetStyle(ControlStyles.UserPaint, true);
-            SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.ResizeRedraw | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
 
             InitializeComponent();
 
-            Load        += MainView_Load;
+            Load        += MainView_Load;         
             Shown       += MainView_Shown;
             FormClosing += MainView_FormClosing;
+          
+            Main_Form = new Form();
+            Main_Form.StartPosition = FormStartPosition.CenterScreen;
+            Main_Form.Text   = "Welcome";
+            Main_Form.FormClosing += Main_Form_FormClosing;
+            Main_Form.Show();
+            Main_Form.Hide();
+        }
+
+        private void Main_Form_FormClosing(object sender, FormClosingEventArgs e)
+        {           
+            e.Cancel = true;
+            waypoint_grid_button_Click(sender, e);
         }
 
         #region GLOBAL VARIABLES
+        public FlickerFreePanel comportPanel;
+
         public Bitmap AI_background;
         public Bitmap AI_Wing;
         public Point AI_imageSize;
-
         public Label AirspeedLabel;
         public Label ThrottleLabel;
         public Label HeadingLabel;
@@ -64,7 +87,7 @@ namespace UGCS3
         public Label SignalLabel;
         public ComboBox MapBox;
 
-        private GMapControl gMapControl;
+       // private GMapControl gMapControl;
         private PictureBox Attitude_Indicator;
         private Timer DoUI_Timer;
         private Xplane xplane10;
@@ -76,12 +99,20 @@ namespace UGCS3
         private Timer System_Timer;
         private SerialPort SerialPortObject;
         private GMapDirectionMarker _GmapDirectionalMarker;
+
+        private GMapWayPointMarker GPRS_Marker;
+        private GMapRoute GPRS_Route;
+
         private GmapTargetMarker target_marker;
         private GMapRoute _GmapRoute;
         private GMapWayPointMarker _HomeMarker;
         private GMapOverlay HeaderOverlay;
         private GMapOverlay TargetOverlay;
         private GMapOverlay WayPointOverlay;
+        private GMapOverlay SurveyOverlay;
+        private GMapOverlay PlaybackOverlay;
+
+        private BackgroundWorker gprs_backgroundworker;
       
         /*
         private DateTime curTime;
@@ -101,7 +132,6 @@ namespace UGCS3
         private Rectangle MapControl_Rectangle;
         private Rectangle MapControl_Rectangle_Mini;
         private Point DirectionMarkerPoints;
-        private Rectangle AI_myrectangle;
         private Point AI_imagelocation;
         private Point AI_rotationPoint;
         private Point AI_WingPoint;
@@ -113,9 +143,15 @@ namespace UGCS3
         private int grid_button_width = 600;
         private System.Speech.Synthesis.SpeechSynthesizer Speech;
         private ToolStripDropDown _toolStripDropDown;
+
+        BackgroundWorker _bwWayPoints; // consider making this a dynamic object instead of global.
         #endregion
 
+        // Unsued Methods
+        // gMapControl.Manager.PrimaryCache.DeleteOlderThan(DateTime.Now, GoogleHybridMapProvider.Instance.DbId);
 
+
+        FlickerFreeGmapControl gMapControl;
         #region MAIN VIEW REGION
         /// <summary>
         ///  primary load event
@@ -123,53 +159,103 @@ namespace UGCS3
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void MainView_Load(object sender, EventArgs e)
-        {            
-            //Console.WriteLine(MAVLink.MAVLINK_MESSAGE_CRCS[27]);
-            Text = "UGCS 3";
-            Size          = Screen.PrimaryScreen.WorkingArea.Size;
+        {
+            // Maximize Form
             WindowState = FormWindowState.Maximized;
-            StartPosition = FormStartPosition.Manual;
-            Top           = (Screen.PrimaryScreen.WorkingArea.Height - Height) / 2;
-            Left          = (Screen.PrimaryScreen.WorkingArea.Width - Width) / 2;        
+            
+            // Setup Stuff
             BackColor     = Color.FromArgb(38, 39, 41);
             MinimizeBox   = true;
             MapControl_Rectangle      = new Rectangle();
             MapControl_Rectangle_Mini = new Rectangle();
             DirectionMarkerPoints     = new Point();
-            Console.WriteLine("MainView Has Loaded Succesfully..." + DateTime.Now);
+            Text = "UGCS 3";
 
             // Initialise classes
+            gMapControl      = new FlickerFreeGmapControl();
             SerialPortObject = new SerialPort();
             Mavlink_Protocol = new MavLinkSerialPacketClass(SerialPortObject);
             xplane10         = new Xplane();
             Speech           = new SpeechSynthesizer();
+            DoUI_Timer      = new Timer();
+            _bwWayPoints = new BackgroundWorker();
 
-            // Place any objects properly
+            // Place any objects properly          
             Setup_Controls();           
-
-            DoUI_Timer = new Timer();
-            DoUI_Timer.Interval = 20;
-            DoUI_Timer.Tick += DoUI_Timer_Tick;
-            DoUI_Timer.Start();
-
+                        
             // add resize event
-            Resize += MainView_Resize;
             SettingsButton.Click += SettingsButton_Click;
-            Click += MainView_Click;
-
-            _bwWayPoints.WorkerSupportsCancellation = true;
-            _bwWayPoints.WorkerReportsProgress = true;
+            DoUI_Timer.Tick += DoUI_Timer_Tick;
             _bwWayPoints.DoWork += _bwWayPoints_DoWork;
             _bwWayPoints.RunWorkerCompleted += _bwWayPoints_RunWorkerCompleted;
             RadiusNumericUpDown.ValueChanged += RadiusNumericUpDown_ValueChanged;
-
             ReadWayPointsButton.Click += ReadWayPointsButton_Click;
             WriteWayPointsButton.Click += WriteWayPointsButton_Click;
             Do_Action_Button.Click += Do_Action_Button_Click;
-            Console.WriteLine("MainView Has Shown Sucessfull ... " + DateTime.Now);
-            //WindowState = FormWindowState.Minimized;
+            Resize += MainView_Resize;
+            Click += MainView_Click;
 
-            //Speech.SpeakAsync("Welcome, General Davis Adolf");
+            // Setups            
+            DoUI_Timer.Interval = 20;
+            DoUI_Timer.Start();           
+            _bwWayPoints.WorkerSupportsCancellation = true;
+            _bwWayPoints.WorkerReportsProgress      = true;
+
+            gprs_backgroundworker = new BackgroundWorker();
+            gprs_backgroundworker.WorkerReportsProgress = true;
+            gprs_backgroundworker.WorkerSupportsCancellation = true;
+            gprs_backgroundworker.DoWork += Gprs_backgroundworker_DoWork;
+            if (gprs_backgroundworker.IsBusy == false)
+                gprs_backgroundworker.RunWorkerAsync();
+
+            Console.WriteLine("Application Loaded: " + DateTime.Now);          
+            //Console.WriteLine(MAVLink.MAVLINK_MESSAGE_CRCS[27]);
+        }
+
+
+        System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
+        private void Gprs_backgroundworker_DoWork(object sender, DoWorkEventArgs e)
+        {
+          
+            while(e.Cancel == false)
+            {
+                if(gprs_backgroundworker.CancellationPending == true)
+                {
+                    e.Cancel = true;
+                    break;
+                }
+                else
+                {
+                    // GET STUFF
+                    var url = "http://herybotics.com/wp-uav.php/?u=G";
+
+                    try
+                    {
+                        System.Net.WebRequest request = System.Net.WebRequest.Create(url);
+                        System.Net.WebResponse response = request.GetResponse();
+                        System.IO.Stream datastream = response.GetResponseStream();
+                        System.IO.StreamReader reader = new System.IO.StreamReader(datastream);
+                        string myread = reader.ReadToEnd();
+                        reader.Close();
+                        response.Close();
+                        Console.WriteLine(myread);
+
+                        string[] mystring = myread.Split(';');
+
+                        float lat =(float)(Convert.ToDouble(mystring[2]) * 1e-7);
+                        float lon = (float)(Convert.ToDouble(mystring[3]) * 1e-7);
+
+                        Variables.gprs_latitude  = lat;
+                        Variables.gprs_longitude = lon;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+
+                    System.Threading.Thread.Sleep(2000);
+                }
+            }
         }
 
 
@@ -213,8 +299,8 @@ namespace UGCS3
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void MainView_Resize(object sender, EventArgs e)
-        {
-            Resize_Controls();
+        {          
+             Resize_Controls();
         }
 
         /// <summary>
@@ -222,15 +308,17 @@ namespace UGCS3
         /// </summary>
         private void Setup_Controls()
         {
-            
+            // Global Size of Buttons
             int size_of_buttons = 80;
 
+            // HomeButton
             this.HomeButton.BackColor = Color.Transparent;
             this.HomeButton.Size = new Size(size_of_buttons, size_of_buttons);
             this.HomeButton.FlatStyle = FlatStyle.Popup;
-            this.HomeButton.Image = Properties.Resources.home_button_main_64x64__fw;
+            this.HomeButton.Image    = Properties.Resources.home_button_main_64x64__fw;
             this.HomeButton.Location = new Point(0, 0);
 
+            // SettingsButton
             this.SettingsButton.BackColor = Color.Transparent;
             this.SettingsButton.Size = new Size(size_of_buttons, size_of_buttons);
             this.SettingsButton.FlatStyle = FlatStyle.Popup;
@@ -238,6 +326,7 @@ namespace UGCS3
             this.SettingsButton.Location = new Point(size_of_buttons + 2, 0);
             SettingsButton.MouseEnter += SettingsButton_MouseEnter;
 
+            // UploadButton
             this.UploadButton.BackColor = Color.Transparent;
             this.UploadButton.Size = new Size(size_of_buttons, size_of_buttons);
             this.UploadButton.FlatStyle = FlatStyle.Popup;
@@ -246,7 +335,7 @@ namespace UGCS3
             UploadButton.Click += UploadButton_Click;
             UploadButton.MouseEnter += UploadButton_MouseEnter;
 
-            
+            // FlightPlanButton
             this.Flight_Plan_Button.BackColor = Color.Transparent;
             this.Flight_Plan_Button.Size = new Size(size_of_buttons, size_of_buttons);
             this.Flight_Plan_Button.FlatStyle = FlatStyle.Popup;
@@ -255,7 +344,7 @@ namespace UGCS3
             Flight_Plan_Button.Click += Flight_Plan_Button_Click;
             Flight_Plan_Button.MouseEnter += Flight_Plan_Button_MouseEnter;
             
-            
+            // SerialButton
             this.SerialButton.BackColor = Color.Transparent;
             this.SerialButton.Size = new Size(size_of_buttons, size_of_buttons);
             this.SerialButton.FlatStyle = FlatStyle.Popup;
@@ -263,35 +352,34 @@ namespace UGCS3
             this.SerialButton.Location = new Point(this.ClientSize.Width - 80, 0);
             this.SerialButton.Click += SerialButton_Click;
 
-            //this.StatusPanel.Size = new Size(100, size_of_buttons);
-            
-            
-            this.ComPort_Panel.BackColor = Color.Transparent;
+            // COMPORT PANEL
+            comportPanel = new FlickerFreePanel();
+            comportPanel.BackColor = Color.Transparent;
+            comportPanel.Size = new Size(133,80);
+            comportPanel.BorderStyle = BorderStyle.FixedSingle;
+            this.Controls.Add(comportPanel);
             string[] Ports = new string[] { "select comport" };
-            string[] Baudrates = new string[] { "select baudrate", "1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200" };
-            
+            string[] Baudrates = new string[] { "select baudrate", "1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200" };     
             this.BaudRate_ComboBox.Items.AddRange(Baudrates);
             this.ComPort_ComboBox.Items.AddRange(Ports);
             this.BaudRate_ComboBox.SelectedIndex = 0;
             this.ComPort_ComboBox.SelectedIndex = 0;
             this.ComPort_ComboBox.Text = "select comport";
-            //this.ComPort_ComboBox.Font 
-            this.ComPort_Panel.Location = new Point(SerialButton.Location.X - ComPort_Panel.Size.Width - 2, SerialButton.Location.Y);
+            comportPanel.Location = new Point(SerialButton.Location.X - comportPanel.Size.Width - 2, SerialButton.Location.Y);
             this.ComPort_ComboBox.MouseEnter += ComPort_ComboBox_MouseEnter;
             ComPort_ComboBox.DropDownStyle = ComboBoxStyle.DropDown;
             BaudRate_ComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            comportPanel.Controls.AddRange(new Control[] { ComPort_ComboBox, StatusProgressBar, BaudRate_ComboBox });
+            ComPort_ComboBox.Location  = new Point(2, 2);
+            StatusProgressBar.Location = new Point(ComPort_ComboBox.Location.X, ComPort_ComboBox.Location.Y + ComPort_ComboBox.Size.Height + 3);
+            BaudRate_ComboBox.Location = new Point(ComPort_ComboBox.Location.X, StatusProgressBar.Location.Y + StatusProgressBar.Size.Height + 3);
 
-            
             this.StatusPanel.BackColor = Color.Transparent;
-            this.StatusPanel.Location = new Point(ComPort_Panel.Location.X - StatusPanel.Size.Width - 2, ComPort_Panel.Location.Y);
+            StatusPanel.BorderStyle = BorderStyle.FixedSingle;
+            this.StatusPanel.Location = new Point(comportPanel.Location.X - StatusPanel.Size.Width - 2, comportPanel.Location.Y);
 
-            //gMapControl.Manager.PrimaryCache.DeleteOlderThan(DateTime.Now, OpenStreetMapProvider.Instance.DbId);
-            gMapControl = new GMapControl();
-            //gMapControl.Manager.PrimaryCache.DeleteOlderThan(DateTime.Now, GoogleHybridMapProvider.Instance.DbId);
-
-            gMapControl.Location = new Point(0, size_of_buttons + 2);
-            gMapControl.AutoSize = false;
-            gMapControl.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            // GmapControl       
+            gMapControl.Location     =  new Point(0, size_of_buttons + 2);
             gMapControl.Size = new Size(this.ClientSize.Width, this.ClientSize.Height - (size_of_buttons + 2));
             gMapControl.Manager.Mode = AccessMode.ServerAndCache;
             gMapControl.Manager.UseMemoryCache = true;
@@ -299,7 +387,7 @@ namespace UGCS3
             gMapControl.Manager.BoostCacheEngine = true;
             gMapControl.MaxZoom = 20;
             gMapControl.MinZoom = 3;
-            gMapControl.Zoom        = 5;
+            gMapControl.Zoom    = 5;
             gMapControl.BorderStyle = BorderStyle.FixedSingle;
             gMapControl.MapProvider = GoogleHybridMapProvider.Instance;
             gMapControl.Refresh();
@@ -309,21 +397,35 @@ namespace UGCS3
             gMapControl.MouseUp       += gMapControl_MouseUp;
             gMapControl.MouseHover    += gMapControl_MouseHover;
             gMapControl.OnMarkerClick += gMapControl_OnMarkerClick;
+            this.Controls.Add(gMapControl);
 
-            Controls.Add(gMapControl);
+            // Overlays and Markers
+            HeaderOverlay          = new GMapOverlay("Main Overlay");
+            TargetOverlay          = new GMapOverlay("Target Overlay");
+            SurveyOverlay          = new GMapOverlay("Survey Overlay");
+            PlaybackOverlay        = new GMapOverlay("Playback Overlay");
+            _GmapDirectionalMarker = new GMapDirectionMarker(new GMap.NET.PointLatLng(Settings.GPSSettings.Default.Home_Latitude, Settings.GPSSettings.Default.Home_Longitude), 0, 0, Properties.Resources.locohale_map_asset_main_red_64x36__fw);
 
-            this.HeaderOverlay = new GMapOverlay("Main Overlay");
-            TargetOverlay = new GMapOverlay("Target Overlay");
-            this._GmapDirectionalMarker = new GMapDirectionMarker(new GMap.NET.PointLatLng(Settings.GPSSettings.Default.Home_Latitude, Settings.GPSSettings.Default.Home_Longitude), 0, 0, Properties.Resources.locohale_map_asset_main_red_64x36__fw);
-            target_marker = new GmapTargetMarker(new GMap.NET.PointLatLng(Settings.GPSSettings.Default.Home_Latitude, Settings.GPSSettings.Default.Home_Longitude), 20);
-            this._HomeMarker = new GMapWayPointMarker(new GMap.NET.PointLatLng(Settings.GPSSettings.Default.Home_Latitude, Settings.GPSSettings.Default.Home_Longitude), Properties.Resources.homewaypoint_new_60x70_, 20);
-            this._GmapRoute = new GMapRoute("Main Route");
-            _GmapRoute.Stroke = routePen;
-            this.HeaderOverlay.Markers.Add(_GmapDirectionalMarker);
+            GPRS_Marker = new GMapWayPointMarker(new GMap.NET.PointLatLng(Settings.GPSSettings.Default.Home_Latitude, Settings.GPSSettings.Default.Home_Longitude), Properties.Resources.generic_waypoint_50x58_, 20);
+            GPRS_Route  = new GMapRoute("GPRS Route");
+            GPRS_Route.Stroke = routePen;
+
+            target_marker          = new GmapTargetMarker(new GMap.NET.PointLatLng(Settings.GPSSettings.Default.Home_Latitude, Settings.GPSSettings.Default.Home_Longitude), 20);
+            _HomeMarker            = new GMapWayPointMarker(new GMap.NET.PointLatLng(Settings.GPSSettings.Default.Home_Latitude, Settings.GPSSettings.Default.Home_Longitude), Properties.Resources.homewaypoint_new_60x70_, 20);
+            _GmapRoute             = new GMapRoute("Main Route");
+            _GmapRoute.Stroke      = routePen;
+
+            HeaderOverlay.Markers.Add(GPRS_Marker);
+            HeaderOverlay.Routes.Add(GPRS_Route);
+
+            HeaderOverlay.Markers.Add(_GmapDirectionalMarker);
+
             TargetOverlay.Markers.Add(target_marker);
-            this.HeaderOverlay.Routes.Add(_GmapRoute);
+            HeaderOverlay.Routes.Add(_GmapRoute);
             gMapControl.Overlays.Add(HeaderOverlay);
             gMapControl.Overlays.Add(TargetOverlay);
+            gMapControl.Overlays.Add(SurveyOverlay);
+            gMapControl.Overlays.Add(PlaybackOverlay);
             gMapControl.ZoomAndCenterMarkers("Main Overlay");
             gMapControl.Zoom = Settings.GPSSettings.Default.Map_Zoom;
             
@@ -332,6 +434,7 @@ namespace UGCS3
             this.WayPointOverlay.Markers.Add(_HomeMarker);
             gMapControl.Overlays.Add(WayPointOverlay);         
             
+            // Trackbar
             htrackBar = new TrackBar();
             htrackBar.TickFrequency = 1;
             htrackBar.Minimum = gMapControl.MinZoom - 1;
@@ -344,7 +447,8 @@ namespace UGCS3
             htrackBar.Location = new Point(gMapControl.ClientSize.Width - htrackBar.ClientSize.Width, gMapControl.ClientSize.Height - htrackBar.ClientSize.Height);
             htrackBar.ValueChanged += htrackBar_ValueChanged;
             gMapControl.Controls.Add(htrackBar);           
-                       
+               
+            // UpdateHome        
             Update_Home_Button = new Button();
             Update_Home_Button.Size = new Size(60, 46);
             Update_Home_Button.Location = new Point(htrackBar.Location.X - Update_Home_Button.ClientSize.Width-5, gMapControl.ClientSize.Height - Update_Home_Button.Height);
@@ -355,6 +459,7 @@ namespace UGCS3
             Update_Home_Button.Click += Update_Home_Button_Click;
             gMapControl.Controls.Add(Update_Home_Button);
             
+            // ClearMap
             Clear_Map_Button = new Button();
             Clear_Map_Button.Size = new Size(60, 46);
             Clear_Map_Button.Location = new Point(Update_Home_Button.Location.X - Clear_Map_Button.ClientSize.Width - 4, gMapControl.ClientSize.Height - Update_Home_Button.Height);
@@ -365,7 +470,6 @@ namespace UGCS3
             Clear_Map_Button.Click += Clear_Map_Button_Click;
             gMapControl.Controls.Add(Clear_Map_Button);
 
-
             // Attitude Indicator Setup
             Attitude_Indicator = new PictureBox();
             Attitude_Indicator.Location = new Point(0, 0);
@@ -375,48 +479,41 @@ namespace UGCS3
             Attitude_Indicator.Paint += Attitude_Indicator_Paint;
             gMapControl.Controls.Add(Attitude_Indicator);
 
-            AI_background = Properties.Resources.attitude_background_930x1593;
+            // Bitmaps
+            AI_background   = Properties.Resources.attitude_background_930x1593;
+            AI_Wing         = Properties.Resources.attitude_indicator_wing;
+            AI_imageSize    = new Point(AI_background.Size.Width, AI_background.Size.Height);
+            AI_imagelocation  = new Point((Attitude_Indicator.Size.Width / 2) - (AI_imageSize.X / 2), (Attitude_Indicator.Size.Height / 2) - (AI_imageSize.Y / 2));
+            AI_rotationPoint  = new Point((Attitude_Indicator.Size.Width / 2), (Attitude_Indicator.Size.Height / 2));
+            AI_WingPoint      = new Point((Attitude_Indicator.Size.Width / 2) - (AI_Wing.Size.Width / 2), (Attitude_Indicator.Size.Height / 2) - (AI_Wing.Size.Height / 2));
 
-            AI_Wing = Properties.Resources.attitude_indicator_wing;
-            AI_imageSize = new Point(AI_background.Size.Width, AI_background.Size.Height);
-            AI_myrectangle = new Rectangle(0, 0, Attitude_Indicator.Size.Width, Attitude_Indicator.Size.Height);
-            AI_imagelocation = new Point((Attitude_Indicator.Size.Width / 2) - (AI_imageSize.X / 2), (Attitude_Indicator.Size.Height / 2) - (AI_imageSize.Y / 2));
-            AI_rotationPoint = new Point((Attitude_Indicator.Size.Width / 2), (Attitude_Indicator.Size.Height / 2));
-            AI_WingPoint = new Point((Attitude_Indicator.Size.Width / 2) - (AI_Wing.Size.Width / 2), (Attitude_Indicator.Size.Height / 2) - (AI_Wing.Size.Height / 2));
-            
-            
             // Airspeed label
             AirspeedLabel = new Label();
             AirspeedLabel.Size = new System.Drawing.Size(54, 25);
             AirspeedLabel.BackColor = Color.Transparent;
             AirspeedLabel.TextAlign = ContentAlignment.MiddleCenter;
-            //AirspeedLabel.Font = new System.Drawing.Font(FontFamily.GenericSansSerif, 9);
             AirspeedLabel.ForeColor = Color.Green;
             AirspeedLabel.BorderStyle = BorderStyle.FixedSingle;
             AirspeedLabel.Text = "AS (m/s)";
             AirspeedLabel.Location = new Point(Attitude_Indicator.ClientSize.Width - AirspeedLabel.Size.Width-2, Attitude_Indicator.ClientSize.Height - AirspeedLabel.Size.Height - 2);
             this.Attitude_Indicator.Controls.Add(AirspeedLabel);
-
             
             // GPS Label      
             GPSLabel = new Label();
             GPSLabel.Size = new System.Drawing.Size(54, 25);
             GPSLabel.BackColor = Color.Transparent;
             GPSLabel.TextAlign = ContentAlignment.MiddleCenter;
-            //GPSLabel.Font = new System.Drawing.Font(FontFamily.GenericSansSerif, 8);
             GPSLabel.ForeColor = Color.Green;
             GPSLabel.BorderStyle = BorderStyle.FixedSingle;
             GPSLabel.Text = "GPS Fix";
             GPSLabel.Location = new Point(Attitude_Indicator.ClientSize.Width - GPSLabel.Size.Width - 2, Attitude_Indicator.ClientSize.Height - 3*GPSLabel.Size.Height - 2);
-            this.Attitude_Indicator.Controls.Add(GPSLabel);
-            
+            this.Attitude_Indicator.Controls.Add(GPSLabel);          
             
             // Satellites Label
             SATSLabel = new Label();
             SATSLabel.Size = new System.Drawing.Size(54, 25);
             SATSLabel.BackColor = Color.Transparent;
             SATSLabel.TextAlign = ContentAlignment.MiddleCenter;
-           // SATSLabel.Font = new System.Drawing.Font(FontFamily.GenericSansSerif, 8);
             SATSLabel.ForeColor = Color.Green;
             SATSLabel.BorderStyle = BorderStyle.FixedSingle;
             SATSLabel.Text = "## sats";
@@ -428,7 +525,6 @@ namespace UGCS3
             ThrottleLabel = new Label();
             ThrottleLabel.Size = new System.Drawing.Size(54, 25);
             ThrottleLabel.BackColor = Color.Transparent;
-            //ThrottleLabel.Font = new System.Drawing.Font(FontFamily.GenericSansSerif, 8,FontStyle.Regular);
             ThrottleLabel.TextAlign = ContentAlignment.MiddleCenter;
             ThrottleLabel.ForeColor = Color.DarkBlue;
             ThrottleLabel.BorderStyle = BorderStyle.FixedSingle;
@@ -440,7 +536,6 @@ namespace UGCS3
             ModeLabel = new Label();
             ModeLabel.Size = new System.Drawing.Size(54, 25);
             ModeLabel.BackColor = Color.Transparent;
-            //ModeLabel.Font = new System.Drawing.Font(FontFamily.GenericSansSerif, 9);
             ModeLabel.TextAlign = ContentAlignment.MiddleCenter;
             ModeLabel.ForeColor = Color.Black;
             ModeLabel.BorderStyle = BorderStyle.FixedSingle;
@@ -452,7 +547,6 @@ namespace UGCS3
             GroundSpeedLablel = new Label();
             GroundSpeedLablel.Size = new System.Drawing.Size(54, 25);
             GroundSpeedLablel.BackColor = Color.Transparent;
-           // GroundSpeedLablel.Font = new System.Drawing.Font(FontFamily.GenericSansSerif, 9);
             GroundSpeedLablel.TextAlign = ContentAlignment.MiddleCenter;
             GroundSpeedLablel.ForeColor = Color.Black;
             GroundSpeedLablel.BorderStyle = BorderStyle.FixedSingle;
@@ -460,10 +554,10 @@ namespace UGCS3
             GroundSpeedLablel.Location = new Point(2, Attitude_Indicator.ClientSize.Height - (2 * GroundSpeedLablel.Size.Height) - 2);
             this.Attitude_Indicator.Controls.Add(GroundSpeedLablel);
 
+            // HeadingLabel
             HeadingLabel = new Label();
             HeadingLabel.Size = new System.Drawing.Size(50, 25);
             HeadingLabel.BackColor = Color.Transparent;
-            //HeadingLabel.Font = new System.Drawing.Font(FontFamily.GenericSansSerif, 11);
             HeadingLabel.TextAlign = ContentAlignment.MiddleCenter;
             HeadingLabel.ForeColor = Color.Black;
             HeadingLabel.BorderStyle = BorderStyle.FixedSingle;
@@ -471,11 +565,10 @@ namespace UGCS3
             HeadingLabel.Location = new Point((Attitude_Indicator.ClientSize.Width / 2) - (HeadingLabel.Width / 2), 0);
             this.Attitude_Indicator.Controls.Add(HeadingLabel);
 
-            // Signal Labek           
+            // SignalLabel           
             SignalLabel = new Label();
             SignalLabel.Size = new System.Drawing.Size(46, 25);
             SignalLabel.BackColor = Color.Transparent;
-            //SignalLabel.Font = new System.Drawing.Font(FontFamily.GenericSansSerif, 8);
             SignalLabel.TextAlign = ContentAlignment.MiddleCenter;
             SignalLabel.ForeColor = Color.Black;
             SignalLabel.BorderStyle = BorderStyle.FixedSingle;
@@ -483,11 +576,10 @@ namespace UGCS3
             SignalLabel.Location = new Point(Attitude_Indicator.ClientSize.Width - SignalLabel.Size.Width - 2, 0);
             this.Attitude_Indicator.Controls.Add(SignalLabel);
 
-
+            // BatteryLabel
             BatteryLabel = new Label();
             BatteryLabel.Size = new System.Drawing.Size(60, 25);
             BatteryLabel.BackColor = Color.Transparent;
-            //BatteryLabel.Font = new System.Drawing.Font(FontFamily.GenericSansSerif, 8);
             BatteryLabel.TextAlign = ContentAlignment.MiddleCenter;
             BatteryLabel.ForeColor = Color.Black;
             BatteryLabel.BorderStyle = BorderStyle.FixedSingle;
@@ -495,26 +587,25 @@ namespace UGCS3
             BatteryLabel.Location = new Point(0, 0);
             this.Attitude_Indicator.Controls.Add(BatteryLabel);
 
-            
-            // mapBox
+            // Maps ComboBox
             this.MapBox = new ComboBox();
             this.MapBox.Size = new System.Drawing.Size(100, 25);
-            this.MapBox.MaximumSize = new System.Drawing.Size(100, 30);
-            //string.Format()
-            
+            this.MapBox.MaximumSize = new System.Drawing.Size(100, 30);   
+                    
+            /*
             Console.WriteLine(GoogleHybridMapProvider.Instance.RefererUrl);
             Console.WriteLine(GoogleHybridMapProvider.Instance.SecureWord);
             Console.WriteLine(GoogleHybridMapProvider.Instance.Server);
             Console.WriteLine(GoogleHybridMapProvider.Instance.ServerAPIs);
             Console.WriteLine(GoogleHybridMapProvider.IsSocksProxy);
             Console.WriteLine(GoogleHybridMapProvider.TimeoutMs);
-            Console.WriteLine(GoogleHybridMapProvider.UserAgent);
-           
+            Console.WriteLine(GoogleHybridMapProvider.UserAgent);                  
             GoogleHybridMapProvider.Instance.Version = "h@333000000";
             Console.WriteLine(GoogleHybridMapProvider.Instance.Version);
             Console.WriteLine(GoogleHybridMapProvider.Instance.TryCorrectVersion);
             Console.WriteLine(GoogleHybridMapProvider.WebProxy);
-             
+            */   
+                     
             string[] maps = new string[] { 
                 GoogleHybridMapProvider.Instance.Name, 
                 GoogleSatelliteMapProvider.Instance.Name, 
@@ -527,7 +618,6 @@ namespace UGCS3
             this.MapBox.SelectedIndexChanged += MapBox_SelectedIndexChanged;
             this.MapBox.SelectedIndex = Settings.GPSSettings.Default.Map_Type;
             this.gMapControl.Controls.Add(MapBox);
-
             
             // waypoint grid button
             this.waypoint_grid_button = new Button();
@@ -539,15 +629,14 @@ namespace UGCS3
             this.waypoint_grid_button.BackgroundImageLayout = ImageLayout.Tile;
             this.waypoint_grid_button.Click += waypoint_grid_button_Click;
             this.gMapControl.Controls.Add(waypoint_grid_button);
-
             
-            // WayPoint DataGridView
-            this.WayPoint_DataGridView = new DataGridView();
-            WayPoint_DataGridView.AutoSize = false;
+            // Consider making this object only available when grid button has been clicked
+            // Future Updates
+            // WayPoint DataGridView           
+            this.WayPoint_DataGridView = new DataGridView();          
             this.WayPoint_DataGridView.Location = this.waypoint_grid_button.Location;
             this.WayPoint_DataGridView.Size = this.waypoint_grid_button.Size;
-            this.gMapControl.Controls.Add(WayPoint_DataGridView);
-
+            Main_Form.Controls.Add(WayPoint_DataGridView);
             
             DGVTextBoxColumn = new DataGridViewTextBoxColumn();
             DGVTextBoxColumn.SortMode = DataGridViewColumnSortMode.NotSortable;
@@ -641,6 +730,9 @@ namespace UGCS3
             SettingsCntrl.Hide();
             this.Controls.Add(SettingsCntrl);   
             SettingsCntrl.Parameter_button.Click += Parameter_button_Click;
+            SettingsCntrl.plotLatLng_button.Click += plotLatLng_button_Click;
+
+           
         }
 
 
@@ -649,7 +741,8 @@ namespace UGCS3
         /// </summary>
         private void Resize_Controls()
         {
-           // MessageBox.Show("Humble");
+            //Console.WriteLine("Humble");
+            //MessageBox.Show("Humble");
 
             if (fraction_GmapSize != 1)
             {
@@ -664,15 +757,15 @@ namespace UGCS3
             this.UploadButton.Location = new Point(SettingsButton.Location.X + size_of_buttons + 2, 0);
             this.Flight_Plan_Button.Location = new Point(UploadButton.Location.X + size_of_buttons + 2, 0);         
             this.SerialButton.Location = new Point(ClientSize.Width - 80, 0);
-            this.ComPort_Panel.Location = new System.Drawing.Point(SerialButton.Location.X - ComPort_Panel.Size.Width - 2, SerialButton.Location.Y);
-            this.StatusPanel.Location = new Point(ComPort_Panel.Location.X - StatusPanel.Size.Width - 2, ComPort_Panel.Location.Y);
+            this.comportPanel.Location = new System.Drawing.Point(SerialButton.Location.X - comportPanel.Size.Width - 2, SerialButton.Location.Y);
+            this.StatusPanel.Location = new Point(comportPanel.Location.X - StatusPanel.Size.Width - 2, comportPanel.Location.Y);
             this.gMapControl.Location = new Point(0, size_of_buttons + 2);
             this.gMapControl.Size = new Size((int)(this.ClientSize.Width * fraction_GmapSize), this.ClientSize.Height - (size_of_buttons + 2));
 
             // Attitude indicator
             this.Attitude_Indicator.Location = new Point(0, 0);
-            this.Attitude_Indicator.Size = new Size((int)(gMapControl.Size.Width * (0.25 + (1 - fraction_GmapSize) / 3)), (int)(gMapControl.Size.Height * 0.50));
-            this.MapBox.Location = new Point(Attitude_Indicator.Location.X + Attitude_Indicator.ClientSize.Width + 2, 0);
+            this.Attitude_Indicator.Size     = new Size((int)(gMapControl.Size.Width * (0.25 + (1 - fraction_GmapSize) / 3)), (int)(gMapControl.Size.Height * 0.50));
+            this.MapBox.Location             = new Point(Attitude_Indicator.Location.X + Attitude_Indicator.ClientSize.Width + 2, 0);
 
             // waypoint grid button
             this.waypoint_grid_button.Size = new System.Drawing.Size(grid_button_width, 25);
@@ -703,7 +796,7 @@ namespace UGCS3
             gfx.Clear(Color.Black);
             AI_imagelocation = new Point((Attitude_Indicator.Size.Width / 2) - (AI_imageSize.X / 2), (Attitude_Indicator.Size.Height / 2) - (AI_imageSize.Y / 2));
             AI_rotationPoint = new Point((Attitude_Indicator.Size.Width / 2), (Attitude_Indicator.Size.Height / 2));
-            AI_WingPoint = new Point((Attitude_Indicator.Size.Width / 2) - (AI_Wing.Size.Width / 2), (Attitude_Indicator.Size.Height / 2) - (AI_Wing.Size.Height / 2)); ;
+            AI_WingPoint     = new Point((Attitude_Indicator.Size.Width / 2) - (AI_Wing.Size.Width / 2), (Attitude_Indicator.Size.Height / 2) - (AI_Wing.Size.Height / 2)); ;
             Attitude_Indicator.Invalidate();
 
             if (CustomDataGridCntrl != null)
@@ -955,10 +1048,8 @@ namespace UGCS3
                 main_backgroundWorker.RunWorkerAsync();
             }
             //ParameterNames_TextBox = new TextBox();
-
             //ParameterNames_TextBox.Location = new Point(500, 200);
             //gMapControl.Controls.Add(ParameterNames_TextBox);
-
         }
 
         /// <summary>
@@ -1003,6 +1094,7 @@ namespace UGCS3
             }
         }
 
+       
 
         /// <summary>
         /// Main view background worker thread
@@ -1061,7 +1153,7 @@ namespace UGCS3
 
                                         Log.Log.logparameter(_updated_param_name, param_index, param_value, Variables.UAVID);
 
-                                        this.Invoke(new Action(() => CustomDataGridCntrl.Add_Rows(received_paramter_t.param_index, _updated_param_name, param_value, 3, 0.05F, Int16.MinValue, Int16.MaxValue)));
+                                        this.Invoke(new Action(() => CustomDataGridCntrl.Add_Rows(received_paramter_t.param_index, _updated_param_name, param_value, 3, 0.05F, Int16.MinValue, Int16.MaxValue, received_paramter_t.param_type)));
 
                                         Console.WriteLine("UAV" + '\t' + Variables.UAVID + " " + '\t' + _updated_param_name + " " + '\t' + received_paramter_t.param_value + '\t' + received_paramter_t.param_index + '\t' + received_paramter_t.param_count);
 
@@ -1436,6 +1528,9 @@ namespace UGCS3
                 case
                 1:
                     slow_1Hz_counter++;
+
+                    GPRS_Map(new GMap.NET.PointLatLng(Variables.gprs_latitude, Variables.gprs_longitude));
+
                     if (!Variables.WAITING_FOR_PARAM_LIST)
                     {
                         // infact heading and yawdeg should both be true heading, here heading is used as the true heading from hil and yaw as the dcm true heading
@@ -1492,12 +1587,15 @@ namespace UGCS3
 
                 case 9:
                     slow_1Hz_counter = 0;
-                    Zoom_and_Center_DirectionMArker();
+                    if(SerialPortObject.IsOpen)
+                        Zoom_and_Center_DirectionMArker();
                     break;
 
             }
         }
         #endregion
+
+       
 
        
         #region MAP CONTROL REGION
@@ -1568,6 +1666,7 @@ namespace UGCS3
             _GmapDirectionalMarker.ToolTipText = Variables.imu_altitude.ToString("0") + "m";
 
             _GmapRoute.Points.Add(pt);
+            
             //_GmapRoute
             HeaderOverlay.Routes.Add(_GmapRoute);
             HeaderOverlay.Routes.RemoveAt(0);
@@ -1575,7 +1674,38 @@ namespace UGCS3
             if (_GmapRoute.Points.Count >= 200)
                 _GmapRoute.Points.Clear();
         }
-        
+
+
+        private void GPRS_Map(GMap.NET.PointLatLng pt)
+        {
+            GPRS_Marker.Position = pt;
+            GPRS_Route.Points.Add(pt);
+            HeaderOverlay.Routes.Add(GPRS_Route);
+            HeaderOverlay.Routes.RemoveAt(0);
+            if (GPRS_Route.Points.Count >= 200)
+                GPRS_Route.Points.Clear();
+
+            uint pad = 20;
+            MapControl_Rectangle_Mini.X         = (int)(pad);
+            MapControl_Rectangle_Mini.Y     = (int)(Attitude_Indicator.ClientSize.Height + pad);
+            MapControl_Rectangle_Mini.Width = (int)(Attitude_Indicator.ClientSize.Width);
+            MapControl_Rectangle_Mini.Height = (int)(gMapControl.ClientSize.Height - Attitude_Indicator.ClientSize.Width - pad / 2);
+
+            MapControl_Rectangle.X = (int)(Attitude_Indicator.ClientSize.Width + pad);
+            MapControl_Rectangle.Y = (int)pad;
+            MapControl_Rectangle.Width = (int)(gMapControl.ClientSize.Width - Attitude_Indicator.ClientSize.Width - 2 * pad);
+            MapControl_Rectangle.Height = (int)(gMapControl.ClientSize.Height - 2 * pad);
+
+            DirectionMarkerPoints.X = (int)gMapControl.FromLatLngToLocal(GPRS_Marker.Position).X;
+            DirectionMarkerPoints.Y = (int)gMapControl.FromLatLngToLocal(GPRS_Marker.Position).Y;
+
+            if (!MapControl_Rectangle.Contains(DirectionMarkerPoints))
+            {
+               // gMapControl.ZoomAndCenterRoute(GPRS_Route);
+                //gMapControl.Zoom = MapZoomLevel;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -1601,6 +1731,13 @@ namespace UGCS3
             });
         }
 
+
+
+        /// <summary>
+        /// Clear Map Button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Clear_Map_Button_Click(object sender, EventArgs e)
         {        
             WayPointOverlay.Markers.Clear();
@@ -1610,6 +1747,14 @@ namespace UGCS3
             WPCoordinates.Add(_HomeMarker.Position);
             WayPointOverlay.Markers.Add(_HomeMarker);
             gMapControl.Invalidate();
+
+            SurveyOverlay.Markers.Clear();
+            SurveyOverlay.Polygons.Clear();
+            SurveyCoordinates.Clear();
+
+            PlaybackOverlay.Markers.Clear();
+            PlaybackOverlay.Routes.Clear();
+            PlaybackOverlay.Polygons.Clear();
         }
 
 
@@ -1678,13 +1823,34 @@ namespace UGCS3
         /// <param name="sender"></param>
         /// <param name="e"></param
         PointLatLng poi_latlng;
+        List<PointLatLng> SurveyCoordinates = new List<PointLatLng>();
+        //Brush surveyBrush;
+        SolidBrush surveyBrush = new SolidBrush(Color.FromArgb(30, Color.Red));
+        Pen surveyPen = new Pen(Color.Pink);
         private void gMapControl_MouseClick(object sender, MouseEventArgs e)
         {
             //MessageBox.Show("What");
             if (_drag_marker)
-                return;
+                return;          
 
-            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            if (ModifierKeys == Keys.Control && e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                GMap.NET.PointLatLng points = (sender as GMapControl).FromLocalToLatLng(e.X, e.Y);
+                SurveyCoordinates.Add(points);         
+                GMapPolygon _WPPolygon = new GMapPolygon(SurveyCoordinates, "Polygon")
+                {
+                    Fill = surveyBrush,
+                    Stroke = surveyPen,
+                };
+
+                SurveyOverlay.Polygons.Clear();
+                SurveyOverlay.Polygons.Add(_WPPolygon);             
+            }
+            else if(ModifierKeys == Keys.Control && ModifierKeys == Keys.C)
+            {
+                Zoom_and_Center_DirectionMArker();
+            }
+            else if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
                 // remember homemarker is index 0.
                 GMap.NET.PointLatLng points = (sender as GMapControl).FromLocalToLatLng(e.X, e.Y);
@@ -1716,6 +1882,8 @@ namespace UGCS3
             }
             else
             {
+                string[] items_ = new string[] { }; 
+
                 poi_latlng = gMapControl.FromLocalToLatLng(e.X, e.Y);
                 gMapControl.ContextMenuStrip = new ContextMenuStrip();
                 gMapControl.ContextMenuStrip.Items.Add("POI");
@@ -1724,15 +1892,27 @@ namespace UGCS3
                 gMapControl.ContextMenuStrip.Items.Add("REPORT");
                 gMapControl.ContextMenuStrip.Items.Add("SPEED");
                 gMapControl.ContextMenuStrip.Items.Add("MISSION START");
+                gMapControl.ContextMenuStrip.Items.Add("GRID");
+                gMapControl.ContextMenuStrip.Items.Add("Populate Grid");
+
+                //(gMapControl.ContextMenuStrip.Items[6] as ToolStripMenuItem).DropDownItems.Add("Create");
+                //(gMapControl.ContextMenuStrip.Items[6] as ToolStripMenuItem).DropDownItems.Add("Populate");
+
+                //gMapControl.ContextMenuStrip.Items.Add("HERY", Properties.Resources.plan_mission_status_off_50x50_, iam_clicked);
+                //gMapControl.ContextMenuStrip.OwnerItem = 
+                // gMapControl.ContextMenuStrip.OwnerItem = ow
                 gMapControl.ContextMenuStrip.ItemClicked += ContextMenuStrip_ItemClicked;
                 gMapControl.ContextMenuStrip.Show(Cursor.Position);
-                gMapControl.ContextMenuStrip = null;
-
-               
+                gMapControl.ContextMenuStrip = null; 
             }
         }
-        
 
+        private void iam_clicked(object sender, EventArgs e)
+        {
+            MessageBox.Show("It Works");
+        }
+        
+       
         private void gMapControl_OnMarkerClick(object sender, EventArgs e)
         {
             if (sender.GetType() == typeof(GMapWayPointMarker))
@@ -1968,6 +2148,146 @@ namespace UGCS3
 
 
         /// <summary>
+        /// 
+        /// </summary>
+        SolidBrush gridBrush = new SolidBrush(Color.FromArgb(30, Color.Cyan));
+        Pen gridPen = new Pen(Color.Aqua);
+        private void Create_Grid()
+        {
+            // get latitude limits
+            List<PointLatLng> gridPtslat = new List<PointLatLng>();
+            List<PointLatLng> gridPtslng = new List<PointLatLng>();
+            List<PointLatLng> gridPts    = new List<PointLatLng>();
+            //List<PointLatLng> polygridPts = new List<PointLatLng>();
+            PointLatLng equator          = new PointLatLng(0, 0);
+
+
+            foreach (PointLatLng ptlatlng in SurveyCoordinates)
+            {
+                gridPtslat.Add(new PointLatLng(ptlatlng.Lat, 0));
+                gridPtslng.Add(new PointLatLng(0, ptlatlng.Lng));
+            }
+
+            // classes
+            Helper poslatHelper = new Helper();
+            Helper neglatHelper = new Helper();
+            Helper poslngHelper = new Helper();
+            Helper neglngHelper = new Helper();
+
+            foreach (PointLatLng ptlatlng in gridPtslat)
+            {
+                //Console.WriteLine((float)gMapControl.MapProvider.Projection.GetDistance(equator, ptlatlng));
+                poslatHelper.RecordMax((float)gMapControl.MapProvider.Projection.GetDistance(equator, ptlatlng), ptlatlng.Lat);
+                    //neglatHelper.RecordMax((float)gMapControl.MapProvider.Projection.GetDistance(equator, ptlatlng), ptlatlng.Lat);
+                poslatHelper.RecordMin((float)gMapControl.MapProvider.Projection.GetDistance(equator, ptlatlng), ptlatlng.Lat);
+                    //neglatHelper.RecordMin((float)gMapControl.MapProvider.Projection.GetDistance(equator, ptlatlng), ptlatlng.Lat);
+            }
+
+            foreach (PointLatLng ptlatlng in gridPtslng)
+            {
+                poslngHelper.RecordMax((float)gMapControl.MapProvider.Projection.GetDistance(equator, ptlatlng), ptlatlng.Lng);
+                    //neglngHelper.RecordMax((float)gMapControl.MapProvider.Projection.GetDistance(equator, ptlatlng), ptlatlng.Lng);
+                poslngHelper.RecordMin((float)gMapControl.MapProvider.Projection.GetDistance(equator, ptlatlng), ptlatlng.Lng);
+                    //neglngHelper.RecordMin((float)gMapControl.MapProvider.Projection.GetDistance(equator, ptlatlng), ptlatlng.Lng);
+            }
+
+            gridPts.Add(new PointLatLng(poslatHelper.max, poslngHelper.min)); // pt1 index0
+            gridPts.Add(new PointLatLng(poslatHelper.min, poslngHelper.min)); // pt2 index1
+                                                                              //     index2
+            
+            // ptn-1
+            PointLatLng pt1   = new PointLatLng(poslatHelper.max, poslngHelper.min);
+            PointLatLng pt2   = new PointLatLng(poslatHelper.min, poslngHelper.min);
+            PointLatLng pt_n1 = new PointLatLng(poslatHelper.min, poslngHelper.max);
+
+            // distance
+            double distance    = gMapControl.MapProvider.Projection.GetDistance(pt2, pt_n1); // in Kilometres
+            distance *= 1000;
+            UInt16 partitions  = Convert.ToUInt16(distance / 50);
+            int marker_columns = partitions - 1;
+
+           Console.WriteLine(distance +"       "+partitions);
+
+           bool reverse = false;
+            // positions latmax, latmin, lonmax + 50m, lonmin + 50m
+            for (int i = 0; i < marker_columns; i++)
+            {
+                // offset longitude
+                double R = 6370000;
+                R       = R * Math.Cos(pt2.Lat);
+                double offset = 50 * (i + 1);
+                double lng_offset = (offset / R) * (180 / Math.PI);
+
+                double new_lng = lng_offset + pt2.Lng;
+
+                // sanity checker
+               PointLatLng new_pt      =  new PointLatLng(poslatHelper.min, new_lng);
+               double sanity_distance  = gMapControl.MapProvider.Projection.GetDistance(new_pt, pt_n1) * 1000;
+
+               if (sanity_distance <= 50)
+               {
+                   break;
+               }
+
+                if (!reverse)
+                {
+                    gridPts.Add(new PointLatLng(poslatHelper.min, new_lng)); // ptn-1
+                    gridPts.Add(new PointLatLng(poslatHelper.max, new_lng)); // ptn
+                    reverse = true;
+                }
+                else
+                {
+                    gridPts.Add(new PointLatLng(poslatHelper.max, new_lng)); // ptn
+                    gridPts.Add(new PointLatLng(poslatHelper.min, new_lng)); // ptn-1
+                    reverse = false;
+                }
+            }
+
+            if (!reverse)
+            {
+                gridPts.Add(new PointLatLng(poslatHelper.min, poslngHelper.max)); // ptn-1
+                gridPts.Add(new PointLatLng(poslatHelper.max, poslngHelper.max)); // ptn
+            }
+            else
+            {
+                gridPts.Add(new PointLatLng(poslatHelper.max, poslngHelper.max)); // ptn
+                gridPts.Add(new PointLatLng(poslatHelper.min, poslngHelper.max)); // ptn-1
+            }
+
+            //polygridPts.Add(gridPts.ElementAt(0));
+            //polygridPts.Add(gridPts.ElementAt(1));
+            //polygridPts.Add(new PointLatLng(poslatHelper.min, poslngHelper.max));
+            //polygridPts.Add(new PointLatLng(poslatHelper.max, poslngHelper.max));
+
+            //GMapPolygon poly = new GMapPolygon(polygridPts, "Poly")
+            //{ 
+            //Fill = gridBrush,
+            //Stroke = gridPen
+            //};
+            //  GMap.NET.WindowsForms.Markers.GMarkerGoogle empty = new GMap.NET.WindowsForms.Markers.GMarkerGoogle(gridPts,)     
+            // SurveyOverlay.Polygons.Add(poly);
+
+            Bitmap _bmp_wp = Properties.Resources.generic_waypoint_50x58_;
+            UInt16 radius  = Convert.ToUInt16(RadiusNumericUpDown.Value);
+            for(int i = 0; i < gridPts.Count; i++)
+            {              
+                GMapWayPointMarker _WPMarker = new GMapWayPointMarker(gridPts.ElementAt(i), _bmp_wp, radius);
+                //_WPMarker.ToolTipMode = MarkerTooltipMode.Always;
+                //_WPMarker.ToolTipText = (i + 1).ToString();
+                //SurveyOverlay.Markers.Add(_WPMarker);
+                MouseEventArgs _eventargs = new MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, (int)(gMapControl.FromLatLngToLocal(_WPMarker.Position)).X, (int)(gMapControl.FromLatLngToLocal(_WPMarker.Position)).Y, 20);
+                object _sender            = gMapControl;
+                gMapControl_MouseClick(_sender, _eventargs);
+            }
+        }
+
+
+        private void populate_grid()
+        {
+
+        }
+
+        /// <summary>
         /// get the clicked item and perform the neccessary action
         /// </summary>
         /// <param name="sender"></param>
@@ -1996,6 +2316,14 @@ namespace UGCS3
 
                 case "MISSION START":
                     Mission_Start_Command();
+                    break;
+
+                case "GRID":
+                    Create_Grid();
+                    break;
+
+                case "Populate Grid":
+
                     break;
             }
         }
@@ -2124,11 +2452,13 @@ namespace UGCS3
             WPCoordinates.RemoveAt(index);
         }
 
+
         private void WPRadius_Update(int index, int Radius)
         {
             (WayPointOverlay.Markers.ElementAt(index) as GMapWayPointMarker).Radius = Radius;
             gMapControl.Invalidate();
         }
+
 
         private void RadiusNumericUpDown_ValueChanged(object sender, EventArgs e)
         {
@@ -2136,6 +2466,7 @@ namespace UGCS3
             for (int i = 0; i < length; i++)
             {
                 (WayPointOverlay.Markers.ElementAt(i) as GMapWayPointMarker).Radius = (int)RadiusNumericUpDown.Value;
+                WayPoint_DataGridView.Rows[i].Cells["Radius_Column"].Value = (int)RadiusNumericUpDown.Value;
             }
             gMapControl.Invalidate();
         }
@@ -2214,6 +2545,26 @@ namespace UGCS3
         #endregion
 
 
+        #region PLAYBACKS
+        private void plotLatLng_button_Click(object sender, EventArgs e)
+        {
+            List<PointLatLng> points = SettingsCntrl.plotLatLng_button_Clicked(sender, e);
+
+            if (points == null)
+                MessageBox.Show("No Valid Points to Map");
+
+            PlaybackOverlay.Clear();
+
+            GMapRoute route = new GMapRoute("Path");
+            route.Points.AddRange(points);
+
+            PlaybackOverlay.Routes.Add(route);
+
+            gMapControl.ZoomAndCenterRoute(route);
+        }
+        #endregion
+
+
         #region SERIAL CONNECTION
         private bool device_connected()
         {
@@ -2285,6 +2636,7 @@ namespace UGCS3
                 CustomDataGridCntrl.BringToFront();
             }
 
+            // 
             Variables.WAITING_FOR_PARAM_LIST = true;
 
             Variables.reset_variables();
@@ -2308,18 +2660,16 @@ namespace UGCS3
                 System_Timer.Enabled = false;
                 System_Timer.Stop();
             }
-
             // check for reception of parameters
             Start_TimerEvent(LIST_TIMER_EVENTS.PARAMETER_LIST, 10);
-
             //Parameters_Cycle_Counter = 30; // the number of cycles the parameter list event will run on the timer
         }
 
         /// <summary>
-        ///  Cleans up all neccessary in the event of an unexpected serial close
-        ///  System_Timer -> Might be running as the serial port is being closed.. stope the timer this will stop all operations with the timer
-        ///  main background worker -> dispose first calls cancel async and then nullifies the thread
-        ///  NB: main background worker is supposed to dispose paramform if closed but it may miss this if inner loop is being polled
+        /// Cleans up all neccessary in the event of an unexpected serial close
+        /// System_Timer -> Might be running as the serial port is being closed.. stope the timer this will stop all operations with the timer
+        /// main background worker -> dispose first calls cancel async and then nullifies the thread
+        /// NB: main background worker is supposed to dispose paramform if closed but it may miss this if inner loop is being polled
         /// </summary>
         private void SerialClosed_CleanUp()
         {
@@ -2340,7 +2690,6 @@ namespace UGCS3
 
 
         #region READ AND WRITE WAYPOINTS
-        BackgroundWorker _bwWayPoints = new BackgroundWorker();
         bool write_success            = false;
         private void _bwWayPoints_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -2384,7 +2733,7 @@ namespace UGCS3
                 // Get the Mission Item
                 object[,] item = e.Argument as object[,];
 
-                if (data_count > 10)
+                if (data_count > 130)
                 {
                     MessageBox.Show("Waypoints exceed limit of the fcs");
                     return;
@@ -2558,7 +2907,7 @@ namespace UGCS3
                 // Home WP
                 WP_Item[0, 0] = (float)WPCoordinates.ElementAt(0).Lat; // Lat
                 WP_Item[0, 1] = (float)WPCoordinates.ElementAt(0).Lng; // Lon
-                WP_Item[0, 2] = (float)50;                             // Alt
+                WP_Item[0, 2] = (float)100;                            // Alt
                 WP_Item[0, 3] = (float)RadiusNumericUpDown.Value;      // Rad
                 WP_Item[0, 4] = (ushort)(0);                           // Command
 
@@ -2665,6 +3014,7 @@ namespace UGCS3
 
         private void WayPoint_DataGridView_CellEndEdit(object sender, EventArgs e)
         {
+
             int rowindex = WayPoint_DataGridView.CurrentCell.RowIndex;
 
             if (WayPoint_DataGridView.Columns["Altitude_Column"].Index == WayPoint_DataGridView.CurrentCell.ColumnIndex)
@@ -2857,24 +3207,33 @@ namespace UGCS3
         private void waypoint_grid_button_Click(object sender, EventArgs e)
         {
             int size = 150;
-            if (size_grip_button == 1)
-            {
-                this.waypoint_grid_button.Size = new System.Drawing.Size(grid_button_width, 25);
-                this.waypoint_grid_button.Location = new Point(gMapControl.ClientSize.Width - waypoint_grid_button.ClientSize.Width, size_grip_button * size);
-                this.waypoint_grid_button.BackgroundImage = Properties.Resources.button_up_40x23_;
 
-                this.WayPoint_DataGridView.Location = new Point(this.waypoint_grid_button.Location.X, 0);
-                this.WayPoint_DataGridView.Size = new Size(this.waypoint_grid_button.Size.Width, size * size_grip_button);
+            Form Dataform;
+            Dataform = new Form();
+            if (size_grip_button == 1)
+            {              
+                Main_Form.Show();
+                Main_Form.TopMost = true;
+                Main_Form.Size = new Size(this.waypoint_grid_button.Size.Width + 20, size * 2 * size_grip_button + 100);
+                this.WayPoint_DataGridView.Location = new Point(0, 0);
+                this.WayPoint_DataGridView.Size     = new Size(this.waypoint_grid_button.Size.Width, size* 2 * size_grip_button);
+
+
+                //this.waypoint_grid_button.Size = new System.Drawing.Size(grid_button_width, 25);
+                //this.waypoint_grid_button.Location = new Point(gMapControl.ClientSize.Width - waypoint_grid_button.ClientSize.Width, size_grip_button * size);
+                //this.waypoint_grid_button.BackgroundImage = Properties.Resources.button_up_40x23_;
+                //this.WayPoint_DataGridView.Location = new Point(this.waypoint_grid_button.Location.X, 0);
+                //this.WayPoint_DataGridView.Size = new Size(this.waypoint_grid_button.Size.Width, size * size_grip_button);
                 size_grip_button = 0;
             }
             else
             {
-                this.waypoint_grid_button.Size            = new System.Drawing.Size(grid_button_width, 25);
-                this.waypoint_grid_button.Location        = new Point(gMapControl.ClientSize.Width - waypoint_grid_button.ClientSize.Width, size_grip_button * size);
-                this.waypoint_grid_button.BackgroundImage = Properties.Resources.button_down_40x23_;
-
-                this.WayPoint_DataGridView.Location = this.waypoint_grid_button.Location;
-                this.WayPoint_DataGridView.Size     = this.waypoint_grid_button.Size;
+                Main_Form.Hide();
+                //this.waypoint_grid_button.Size            = new System.Drawing.Size(grid_button_width, 25);
+                //this.waypoint_grid_button.Location        = new Point(gMapControl.ClientSize.Width - waypoint_grid_button.ClientSize.Width, size_grip_button * size);
+                //this.waypoint_grid_button.BackgroundImage = Properties.Resources.button_down_40x23_;
+                //this.WayPoint_DataGridView.Location = this.waypoint_grid_button.Location;
+                //this.WayPoint_DataGridView.Size     = this.waypoint_grid_button.Size;
                 size_grip_button = 1;
             }
         }
@@ -3105,7 +3464,7 @@ namespace UGCS3
                 }
             }
         }
-
+        
 
         // upload paramters
         int PARAM_INDEX_COUNTER = 0;
@@ -3169,18 +3528,21 @@ namespace UGCS3
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Attitude_Indicator_Paint(object sender, PaintEventArgs e)
-        {
+        {        
             Graphics gfx = e.Graphics;
-
             float roll, pitch, yaw;
             roll = Variables.rollDeg;
             pitch = Variables.pitchDeg;
             yaw = Variables.yawDeg;
 
-            //Bitmap AI_background = Properties.Resources.attitude_background_930x1593;
-            //Bitmap AI_Wing = Properties.Resources.attitude_indicator_wing;
-            GeneralMethods.RotateAndTranslate(e, AI_background, -roll, 0, AI_imagelocation, (double)(6.2 * pitch), AI_rotationPoint, 1);
+            // Work around for 2015 scaling issues
+#if VS2015
+            GeneralMethods.RotateAndTranslateUpdated(e, AI_background, -roll, 0, AI_imagelocation, (double)(6.25 * pitch), AI_rotationPoint, 1);
+            gfx.DrawImageUnscaledAndClipped(AI_Wing, new Rectangle(AI_WingPoint.X, AI_WingPoint.Y, AI_Wing.Size.Width,AI_Wing.Size.Height));
+#else
+            GeneralMethods.RotateAndTranslate(e, AI_background, -roll, 0, AI_imagelocation, (double)(6.25 * pitch), AI_rotationPoint, 1);
             gfx.DrawImage(AI_Wing, AI_WingPoint);
+#endif
 
         }
         #endregion
@@ -3434,10 +3796,10 @@ namespace UGCS3
         }
 
 
-        #endregion
+#endregion
 
 
-        #region MAIN VIEW CLOSING
+#region MAIN VIEW CLOSING
         /// <summary>
         ///  Main view closing events : dispose all objects here
         /// </summary>
@@ -3445,38 +3807,122 @@ namespace UGCS3
         /// <param name="e"></param>
         private void MainView_FormClosing(object sender, FormClosingEventArgs e)
         {
-
-            if (SerialPortObject.IsOpen)
+            if (SerialPortObject != null)
             {
-                try
+                if (SerialPortObject.IsOpen)
                 {
-                    SerialClosed_CleanUp();
-                    SerialPortObject.Close();
+                    try
+                    {
+                        SerialClosed_CleanUp();
+                        SerialPortObject.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        // do nothing
+                    }
                 }
-                catch (Exception ex)
-                {
-                    // do nothing
-                }
+                SerialPortObject.Dispose();
             }
-            SerialPortObject.Dispose();
 
-            this.gMapControl.Manager.CancelTileCaching();
-            this.gMapControl.Dispose();
+            if (gMapControl != null)
+            {
+                gMapControl.MouseClick -= gMapControl_MouseClick;
+                gMapControl.MouseDown  -= gMapControl_MouseDown;
+                gMapControl.MouseMove  -= gMapControl_MouseMove;
+                gMapControl.MouseUp   -= gMapControl_MouseUp;
+                gMapControl.MouseHover -= gMapControl_MouseHover;
+                gMapControl.OnMarkerClick -= gMapControl_OnMarkerClick;
+                gMapControl.Manager.CancelTileCaching();
+                gMapControl.Dispose();
+            }
 
             if (SettingsCntrl != null)
             {
+                SettingsCntrl.Parameter_button.Click -= Parameter_button_Click;
+                SettingsCntrl.plotLatLng_button.Click -= plotLatLng_button_Click;
                 SettingsCntrl.Dispose();
                 SettingsCntrl = null;
             }
 
-            this.DoUI_Timer.Stop();
-            this.DoUI_Timer.Dispose();
+            if (DoUI_Timer != null)
+            {
+                this.DoUI_Timer.Stop();
+                this.DoUI_Timer.Tick -= DoUI_Timer_Tick;
+                this.DoUI_Timer.Dispose();
 
+            }
 
-            this.Speech.Dispose();
-            Speech = null;
+            if (Speech != null)
+            {
+                this.Speech.Dispose();
+                Speech = null;
+            }
         }
-        #endregion
+#endregion
 
     }
+
+
+#region HELPER CLASS
+    public class Helper
+    {
+        public Helper()
+        {
+            rmax1 = 0;
+            min = 0;
+            max = 0;
+            rmin1 = 100000;
+        }
+
+        private float rmax1;
+        public double max;
+        private float rmin1;
+        public double min;
+
+        public float sign(double pt)
+        {
+            if (pt >= 0)
+                return 1.0f;
+            else
+                return -1.0f;
+        }
+
+        public void Record(float dis, double pt)
+        {
+            if (sign(pt) == 1.0f)
+            {
+                RecordMax(dis, pt);
+            }
+            else
+            {
+                RecordMin(-dis, pt);
+            }
+        }
+
+        public void RecordMax(float r1, double r2)
+        {
+            float new_record1 = Math.Max(rmax1, r1);
+
+            if (new_record1 != rmax1)
+            {
+                max = r2;
+                rmax1 = new_record1;
+            }
+        }
+
+
+        public void RecordMin(float r1, double r2)
+        {
+            float new_record1 = Math.Min(rmin1, r1);
+
+            if (new_record1 != rmin1)
+            {
+                min = r2;
+                rmin1 = new_record1;
+            }
+        }
+    }
+#endregion
+
+
 }

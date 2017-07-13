@@ -100,6 +100,7 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.SimIpTextBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.plotLatLng_button = new System.Windows.Forms.Button();
             this.MainPanel.SuspendLayout();
             this.GraphGroupBox.SuspendLayout();
             this.panel5.SuspendLayout();
@@ -128,6 +129,7 @@
             // 
             // GraphGroupBox
             // 
+            this.GraphGroupBox.Controls.Add(this.plotLatLng_button);
             this.GraphGroupBox.Controls.Add(this.millisecondsLabel);
             this.GraphGroupBox.Controls.Add(this.TimeOffsetTextBox);
             this.GraphGroupBox.Controls.Add(this.panel5);
@@ -919,6 +921,16 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "SimIP";
             // 
+            // plotLatLng_button
+            // 
+            this.plotLatLng_button.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.plotLatLng_button.Location = new System.Drawing.Point(4, 489);
+            this.plotLatLng_button.Name = "plotLatLng_button";
+            this.plotLatLng_button.Size = new System.Drawing.Size(101, 27);
+            this.plotLatLng_button.TabIndex = 16;
+            this.plotLatLng_button.Text = "Plot LatLng";
+            this.plotLatLng_button.UseVisualStyleBackColor = true;
+            // 
             // SettingsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -1027,5 +1039,6 @@
         public System.Windows.Forms.ComboBox AntennaComPortcomboBox;
         private System.Windows.Forms.Label millisecondsLabel;
         private System.Windows.Forms.TextBox TimeOffsetTextBox;
+        public System.Windows.Forms.Button plotLatLng_button;
     }
 }

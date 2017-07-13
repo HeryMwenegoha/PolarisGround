@@ -113,6 +113,7 @@ namespace UGCS3
         {
             bool validPacket = false;
             byte a = 0;
+           
             foreach(Type ty in MAVLink.MAVLINK_MESSAGE_INFO)
             {
                 if(ty == indata.GetType())
