@@ -48,6 +48,7 @@ namespace UGCS3
         public MainView()
         {
             DoubleBuffered = true;
+
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.ResizeRedraw | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
 
             InitializeComponent();
@@ -72,7 +73,6 @@ namespace UGCS3
 
         #region GLOBAL VARIABLES
         public FlickerFreePanel comportPanel;
-
         public Bitmap AI_background;
         public Bitmap AI_Wing;
         public Point AI_imageSize;
@@ -87,8 +87,8 @@ namespace UGCS3
         public Label SignalLabel;
         public ComboBox MapBox;
 
-       // private GMapControl gMapControl;
-        private PictureBox Attitude_Indicator;
+        //private PictureBox Attitude_Indicator;
+        private FlickerFreePanel Attitude_Indicator;
         private Timer DoUI_Timer;
         private Xplane xplane10;
         private SettingsControl SettingsCntrl;
@@ -99,7 +99,6 @@ namespace UGCS3
         private Timer System_Timer;
         private SerialPort SerialPortObject;
         private GMapDirectionMarker _GmapDirectionalMarker;
-
         private GMapWayPointMarker GPRS_Marker;
         private GMapRoute GPRS_Route;
 
@@ -111,15 +110,9 @@ namespace UGCS3
         private GMapOverlay WayPointOverlay;
         private GMapOverlay SurveyOverlay;
         private GMapOverlay PlaybackOverlay;
-
-        private BackgroundWorker gprs_backgroundworker;
-      
-        /*
-        private DateTime curTime;
-        private DateTime prevTime;
-        private int medium_5Hz_counter = 0;
-        */ 
-
+        FlickerFreePanel GmapPanel;
+        private GMapControl gMapControl;
+        //FlickerFreeGmapControl gMapControl; // change this to panel level control flicker free panel and add mapcontrol on panel.
         private int slow_1Hz_counter = 0;
         private float fraction_GmapSize = 1;
 
@@ -144,14 +137,14 @@ namespace UGCS3
         private System.Speech.Synthesis.SpeechSynthesizer Speech;
         private ToolStripDropDown _toolStripDropDown;
 
-        BackgroundWorker _bwWayPoints; // consider making this a dynamic object instead of global.
+        BackgroundWorker _bwWayPoints;  // consider making this a dynamic object instead of global.
         #endregion
 
         // Unsued Methods
         // gMapControl.Manager.PrimaryCache.DeleteOlderThan(DateTime.Now, GoogleHybridMapProvider.Instance.DbId);
 
 
-        FlickerFreeGmapControl gMapControl;
+        
         #region MAIN VIEW REGION
         /// <summary>
         ///  primary load event
@@ -173,15 +166,18 @@ namespace UGCS3
 
             // Initialise classes
             gMapControl      = new FlickerFreeGmapControl();
+            GmapPanel = new FlickerFreePanel();
             SerialPortObject = new SerialPort();
             Mavlink_Protocol = new MavLinkSerialPacketClass(SerialPortObject);
             xplane10         = new Xplane();
             Speech           = new SpeechSynthesizer();
-            DoUI_Timer      = new Timer();
-            _bwWayPoints = new BackgroundWorker();
+            DoUI_Timer       = new Timer();
+            _bwWayPoints     = new BackgroundWorker();
 
             // Place any objects properly          
-            Setup_Controls();           
+            Setup_Controls();
+
+            //Console.WriteLine("NO");      
                         
             // add resize event
             SettingsButton.Click += SettingsButton_Click;
@@ -201,61 +197,7 @@ namespace UGCS3
             _bwWayPoints.WorkerSupportsCancellation = true;
             _bwWayPoints.WorkerReportsProgress      = true;
 
-            gprs_backgroundworker = new BackgroundWorker();
-            gprs_backgroundworker.WorkerReportsProgress = true;
-            gprs_backgroundworker.WorkerSupportsCancellation = true;
-            gprs_backgroundworker.DoWork += Gprs_backgroundworker_DoWork;
-            if (gprs_backgroundworker.IsBusy == false)
-                gprs_backgroundworker.RunWorkerAsync();
-
             Console.WriteLine("Application Loaded: " + DateTime.Now);          
-            //Console.WriteLine(MAVLink.MAVLINK_MESSAGE_CRCS[27]);
-        }
-
-
-        System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
-        private void Gprs_backgroundworker_DoWork(object sender, DoWorkEventArgs e)
-        {
-          
-            while(e.Cancel == false)
-            {
-                if(gprs_backgroundworker.CancellationPending == true)
-                {
-                    e.Cancel = true;
-                    break;
-                }
-                else
-                {
-                    // GET STUFF
-                    var url = "http://herybotics.com/wp-uav.php/?u=G";
-
-                    try
-                    {
-                        System.Net.WebRequest request = System.Net.WebRequest.Create(url);
-                        System.Net.WebResponse response = request.GetResponse();
-                        System.IO.Stream datastream = response.GetResponseStream();
-                        System.IO.StreamReader reader = new System.IO.StreamReader(datastream);
-                        string myread = reader.ReadToEnd();
-                        reader.Close();
-                        response.Close();
-                        Console.WriteLine(myread);
-
-                        string[] mystring = myread.Split(';');
-
-                        float lat =(float)(Convert.ToDouble(mystring[2]) * 1e-7);
-                        float lon = (float)(Convert.ToDouble(mystring[3]) * 1e-7);
-
-                        Variables.gprs_latitude  = lat;
-                        Variables.gprs_longitude = lon;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-
-                    System.Threading.Thread.Sleep(2000);
-                }
-            }
         }
 
 
@@ -266,8 +208,7 @@ namespace UGCS3
         /// <param name="e"></param>
         private void MainView_Shown(object sender, EventArgs e)
         {
-            WPSeq_ComboBox.Items.Clear();
-            
+            WPSeq_ComboBox.Items.Clear();            
             WPSeq_ComboBox.Items.Add("Restart Mission");
         }
 
@@ -308,6 +249,7 @@ namespace UGCS3
         /// </summary>
         private void Setup_Controls()
         {
+            // Console.WriteLine("YES");
             // Global Size of Buttons
             int size_of_buttons = 80;
 
@@ -379,8 +321,9 @@ namespace UGCS3
             this.StatusPanel.Location = new Point(comportPanel.Location.X - StatusPanel.Size.Width - 2, comportPanel.Location.Y);
 
             // GmapControl       
-            gMapControl.Location     =  new Point(0, size_of_buttons + 2);
-            gMapControl.Size = new Size(this.ClientSize.Width, this.ClientSize.Height - (size_of_buttons + 2));
+            GmapPanel.Location  =  new Point(0, size_of_buttons + 2);
+            GmapPanel.Size = new Size(this.ClientSize.Width, this.ClientSize.Height - (size_of_buttons + 2));
+            GmapPanel.BorderStyle = BorderStyle.FixedSingle;
             gMapControl.Manager.Mode = AccessMode.ServerAndCache;
             gMapControl.Manager.UseMemoryCache = true;
             gMapControl.Manager.CacheOnIdleRead = true;
@@ -388,6 +331,7 @@ namespace UGCS3
             gMapControl.MaxZoom = 20;
             gMapControl.MinZoom = 3;
             gMapControl.Zoom    = 5;
+            gMapControl.Dock = DockStyle.Fill;
             gMapControl.BorderStyle = BorderStyle.FixedSingle;
             gMapControl.MapProvider = GoogleHybridMapProvider.Instance;
             gMapControl.Refresh();
@@ -397,7 +341,8 @@ namespace UGCS3
             gMapControl.MouseUp       += gMapControl_MouseUp;
             gMapControl.MouseHover    += gMapControl_MouseHover;
             gMapControl.OnMarkerClick += gMapControl_OnMarkerClick;
-            this.Controls.Add(gMapControl);
+            GmapPanel.Controls.Add(gMapControl);
+            this.Controls.Add(GmapPanel);
 
             // Overlays and Markers
             HeaderOverlay          = new GMapOverlay("Main Overlay");
@@ -444,40 +389,47 @@ namespace UGCS3
             htrackBar.Size    = new Size(200, 40);
             htrackBar.TickStyle = TickStyle.Both;
             htrackBar.Orientation = Orientation.Horizontal;
-            htrackBar.Location = new Point(gMapControl.ClientSize.Width - htrackBar.ClientSize.Width, gMapControl.ClientSize.Height - htrackBar.ClientSize.Height);
+            htrackBar.Location = new Point(GmapPanel.ClientSize.Width - htrackBar.ClientSize.Width, GmapPanel.ClientSize.Height - htrackBar.ClientSize.Height);
             htrackBar.ValueChanged += htrackBar_ValueChanged;
-            gMapControl.Controls.Add(htrackBar);           
+            //gMapControl.Controls.Add(htrackBar);
+            GmapPanel.Controls.Add(htrackBar);
+            htrackBar.BringToFront();       
                
             // UpdateHome        
             Update_Home_Button = new Button();
             Update_Home_Button.Size = new Size(60, 46);
-            Update_Home_Button.Location = new Point(htrackBar.Location.X - Update_Home_Button.ClientSize.Width-5, gMapControl.ClientSize.Height - Update_Home_Button.Height);
+            Update_Home_Button.Location = new Point(htrackBar.Location.X - Update_Home_Button.ClientSize.Width-5, GmapPanel.ClientSize.Height - Update_Home_Button.Height);
             Update_Home_Button.Text = "Update Home";
             Update_Home_Button.ForeColor = Color.White;
             Update_Home_Button.BackColor = Color.FromArgb(38, 39, 41);
             Update_Home_Button.FlatStyle = FlatStyle.Popup;
             Update_Home_Button.Click += Update_Home_Button_Click;
-            gMapControl.Controls.Add(Update_Home_Button);
-            
+            //gMapControl.Controls.Add(Update_Home_Button);
+            GmapPanel.Controls.Add(Update_Home_Button);
+            Update_Home_Button.BringToFront();
+
             // ClearMap
             Clear_Map_Button = new Button();
             Clear_Map_Button.Size = new Size(60, 46);
-            Clear_Map_Button.Location = new Point(Update_Home_Button.Location.X - Clear_Map_Button.ClientSize.Width - 4, gMapControl.ClientSize.Height - Update_Home_Button.Height);
+            Clear_Map_Button.Location = new Point(Update_Home_Button.Location.X - Clear_Map_Button.ClientSize.Width - 4, GmapPanel.ClientSize.Height - Update_Home_Button.Height);
             Clear_Map_Button.Text = "Clear Map";
             Clear_Map_Button.ForeColor = Color.White;
             Clear_Map_Button.BackColor = Color.FromArgb(38, 39, 41);
             Clear_Map_Button.FlatStyle = FlatStyle.Popup;
             Clear_Map_Button.Click += Clear_Map_Button_Click;
-            gMapControl.Controls.Add(Clear_Map_Button);
+            //gMapControl.Controls.Add(Clear_Map_Button);
+            GmapPanel.Controls.Add(Clear_Map_Button);
+            Clear_Map_Button.BringToFront();
 
             // Attitude Indicator Setup
-            Attitude_Indicator = new PictureBox();
+            Attitude_Indicator = new FlickerFreePanel();    
             Attitude_Indicator.Location = new Point(0, 0);
             Attitude_Indicator.Size = new Size((int)(gMapControl.Size.Width * 0.25), (int)(gMapControl.Size.Height * 0.50));
             Attitude_Indicator.BackColor = Color.Green;
             Attitude_Indicator.BorderStyle = BorderStyle.FixedSingle;
             Attitude_Indicator.Paint += Attitude_Indicator_Paint;
-            gMapControl.Controls.Add(Attitude_Indicator);
+            GmapPanel.Controls.Add(Attitude_Indicator);
+            Attitude_Indicator.BringToFront();
 
             // Bitmaps
             AI_background   = Properties.Resources.attitude_background_930x1593;
@@ -590,8 +542,8 @@ namespace UGCS3
             // Maps ComboBox
             this.MapBox = new ComboBox();
             this.MapBox.Size = new System.Drawing.Size(100, 25);
-            this.MapBox.MaximumSize = new System.Drawing.Size(100, 30);   
-                    
+            this.MapBox.MaximumSize = new System.Drawing.Size(100, 30);
+
             /*
             Console.WriteLine(GoogleHybridMapProvider.Instance.RefererUrl);
             Console.WriteLine(GoogleHybridMapProvider.Instance.SecureWord);
@@ -604,12 +556,15 @@ namespace UGCS3
             Console.WriteLine(GoogleHybridMapProvider.Instance.Version);
             Console.WriteLine(GoogleHybridMapProvider.Instance.TryCorrectVersion);
             Console.WriteLine(GoogleHybridMapProvider.WebProxy);
-            */   
-                     
-            string[] maps = new string[] { 
-                GoogleHybridMapProvider.Instance.Name, 
-                GoogleSatelliteMapProvider.Instance.Name, 
-                BingHybridMapProvider.Instance.Name, 
+            */
+            // mapbox panel
+            this.MapBox = new ComboBox();
+            this.MapBox.Size = new System.Drawing.Size(100, 25);
+            this.MapBox.MaximumSize = new System.Drawing.Size(100, 30);
+            string[] maps = new string[] {
+                GoogleHybridMapProvider.Instance.Name,
+                GoogleSatelliteMapProvider.Instance.Name,
+                BingHybridMapProvider.Instance.Name,
                 BingSatelliteMapProvider.Instance.Name,
                 OpenStreetMapProvider.Instance.Name
             };
@@ -617,18 +572,20 @@ namespace UGCS3
             this.MapBox.Location = new Point(Attitude_Indicator.Location.X + Attitude_Indicator.ClientSize.Width + 2, 0);
             this.MapBox.SelectedIndexChanged += MapBox_SelectedIndexChanged;
             this.MapBox.SelectedIndex = Settings.GPSSettings.Default.Map_Type;
-            this.gMapControl.Controls.Add(MapBox);
-            
+            this.GmapPanel.Controls.Add(MapBox);
+            MapBox.BringToFront();
+
             // waypoint grid button
             this.waypoint_grid_button = new Button();
             this.waypoint_grid_button.Size = new System.Drawing.Size(grid_button_width, 25);
-            this.waypoint_grid_button.Location = new Point(gMapControl.ClientSize.Width - waypoint_grid_button.ClientSize.Width, 0);
+            this.waypoint_grid_button.Location = new Point(GmapPanel.ClientSize.Width - waypoint_grid_button.ClientSize.Width, 0);
             this.waypoint_grid_button.BackColor = Color.FromArgb(38, 39, 41);
             this.waypoint_grid_button.FlatStyle = FlatStyle.Popup;
             this.waypoint_grid_button.BackgroundImage = Properties.Resources.button_down_40x23_;
             this.waypoint_grid_button.BackgroundImageLayout = ImageLayout.Tile;
             this.waypoint_grid_button.Click += waypoint_grid_button_Click;
-            this.gMapControl.Controls.Add(waypoint_grid_button);
+            this.GmapPanel.Controls.Add(waypoint_grid_button);
+            waypoint_grid_button.BringToFront();
             
             // Consider making this object only available when grid button has been clicked
             // Future Updates
@@ -718,10 +675,9 @@ namespace UGCS3
             WayPoint_DataGridView.CellClick     += WayPoint_DataGridView_CellClick;
             WayPoint_DataGridView.RowsRemoved   += WayPoint_DataGridView_RowsRemoved;
             WayPoint_DataGridView.CellEndEdit   += WayPoint_DataGridView_CellEndEdit;
-            
-            
+
             SettingsCntrl = new SettingsControl();
-            SettingsCntrl.Location = new Point(this.ClientSize.Width / 2, gMapControl.Location.Y - 3);
+            SettingsCntrl.Location = new Point(this.ClientSize.Width / 2, GmapPanel.Location.Y - 3);
             SettingsCntrl.startXplaneButton.Click += startXplaneButton_Click;
             SettingsCntrl.udpconnectButton.Click += udpconnectButton_Click;
             SettingsCntrl.SimIpTextBox.Text = XplaneHil.Default.simIP;
@@ -730,9 +686,7 @@ namespace UGCS3
             SettingsCntrl.Hide();
             this.Controls.Add(SettingsCntrl);   
             SettingsCntrl.Parameter_button.Click += Parameter_button_Click;
-            SettingsCntrl.plotLatLng_button.Click += plotLatLng_button_Click;
-
-           
+            SettingsCntrl.plotLatLng_button.Click += plotLatLng_button_Click;        
         }
 
 
@@ -743,7 +697,6 @@ namespace UGCS3
         {
             //Console.WriteLine("Humble");
             //MessageBox.Show("Humble");
-
             if (fraction_GmapSize != 1)
             {
                 float width = this.ClientSize.Width;
@@ -759,17 +712,18 @@ namespace UGCS3
             this.SerialButton.Location = new Point(ClientSize.Width - 80, 0);
             this.comportPanel.Location = new System.Drawing.Point(SerialButton.Location.X - comportPanel.Size.Width - 2, SerialButton.Location.Y);
             this.StatusPanel.Location = new Point(comportPanel.Location.X - StatusPanel.Size.Width - 2, comportPanel.Location.Y);
-            this.gMapControl.Location = new Point(0, size_of_buttons + 2);
-            this.gMapControl.Size = new Size((int)(this.ClientSize.Width * fraction_GmapSize), this.ClientSize.Height - (size_of_buttons + 2));
+
+            this.GmapPanel.Location = new Point(0, size_of_buttons + 2);
+            this.GmapPanel.Size = new Size((int)(this.ClientSize.Width * fraction_GmapSize), this.ClientSize.Height - (size_of_buttons + 2));
 
             // Attitude indicator
             this.Attitude_Indicator.Location = new Point(0, 0);
-            this.Attitude_Indicator.Size     = new Size((int)(gMapControl.Size.Width * (0.25 + (1 - fraction_GmapSize) / 3)), (int)(gMapControl.Size.Height * 0.50));
+            this.Attitude_Indicator.Size     = new Size((int)(GmapPanel.Size.Width * (0.25 + (1 - fraction_GmapSize) / 3)), (int)(GmapPanel.Size.Height * 0.50));
             this.MapBox.Location             = new Point(Attitude_Indicator.Location.X + Attitude_Indicator.ClientSize.Width + 2, 0);
 
             // waypoint grid button
             this.waypoint_grid_button.Size = new System.Drawing.Size(grid_button_width, 25);
-            this.waypoint_grid_button.Location = new Point(gMapControl.ClientSize.Width - waypoint_grid_button.ClientSize.Width, waypoint_grid_button.Location.Y);
+            this.waypoint_grid_button.Location = new Point(GmapPanel.ClientSize.Width - waypoint_grid_button.ClientSize.Width, waypoint_grid_button.Location.Y);
 
             this.WayPoint_DataGridView.Location = new Point(this.waypoint_grid_button.Location.X, 0);
             this.WayPoint_DataGridView.Size = new Size(this.waypoint_grid_button.Size.Width, WayPoint_DataGridView.Size.Height);
@@ -788,27 +742,29 @@ namespace UGCS3
             SignalLabel.Location   = new Point(Attitude_Indicator.ClientSize.Width - SignalLabel.Size.Width - 2, 0);  
             BatteryLabel.Location  = new Point(0, 0);
 
-            htrackBar.Location = new Point(gMapControl.ClientSize.Width - htrackBar.ClientSize.Width, gMapControl.ClientSize.Height - htrackBar.ClientSize.Height);
-            Update_Home_Button.Location = new Point(htrackBar.Location.X - Update_Home_Button.ClientSize.Width - 5, gMapControl.ClientSize.Height - Update_Home_Button.Height);
-            Clear_Map_Button.Location = new Point(Update_Home_Button.Location.X - Clear_Map_Button.ClientSize.Width - 4, gMapControl.ClientSize.Height - Clear_Map_Button.Height);
+            htrackBar.Location = new Point(GmapPanel.ClientSize.Width - htrackBar.ClientSize.Width, GmapPanel.ClientSize.Height - htrackBar.ClientSize.Height);
+            Update_Home_Button.Location = new Point(htrackBar.Location.X - Update_Home_Button.ClientSize.Width - 5, GmapPanel.ClientSize.Height - Update_Home_Button.Height);
+            Clear_Map_Button.Location = new Point(Update_Home_Button.Location.X - Clear_Map_Button.ClientSize.Width - 4, GmapPanel.ClientSize.Height - Clear_Map_Button.Height);
 
-            Graphics gfx = Attitude_Indicator.CreateGraphics();
-            gfx.Clear(Color.Black);
+            //Graphics gfx = Attitude_Indicator.CreateGraphics();
+            //gfx.Clear(Color.Black);
+
             AI_imagelocation = new Point((Attitude_Indicator.Size.Width / 2) - (AI_imageSize.X / 2), (Attitude_Indicator.Size.Height / 2) - (AI_imageSize.Y / 2));
             AI_rotationPoint = new Point((Attitude_Indicator.Size.Width / 2), (Attitude_Indicator.Size.Height / 2));
             AI_WingPoint     = new Point((Attitude_Indicator.Size.Width / 2) - (AI_Wing.Size.Width / 2), (Attitude_Indicator.Size.Height / 2) - (AI_Wing.Size.Height / 2)); ;
-            Attitude_Indicator.Invalidate();
+
+           // Attitude_Indicator.Invalidate();
 
             if (CustomDataGridCntrl != null)
             {
                 CustomDataGridCntrl.Location = new Point(0, Attitude_Indicator.Location.Y + Attitude_Indicator.Size.Height + 2); // nB: if i change Y into automatic size then need to include this control in resize method
-                CustomDataGridCntrl.Size = new Size(235, (int)(gMapControl.Size.Height * 0.50));
-                CustomDataGridCntrl.BorderPanel.Size = new Size(231, (int)(gMapControl.Size.Height * 0.50) - 6);
+                CustomDataGridCntrl.Size = new Size(235, (int)(GmapPanel.Size.Height * 0.50));
+                CustomDataGridCntrl.BorderPanel.Size = new Size(231, (int)(GmapPanel.Size.Height * 0.50) - 6);
             }
 
             if (SettingsCntrl != null)
             {
-                SettingsCntrl.Location = new Point((int)(this.ClientSize.Width * fraction_GmapSize), gMapControl.Location.Y - 3);
+                SettingsCntrl.Location = new Point((int)(this.ClientSize.Width * fraction_GmapSize), GmapPanel.Location.Y - 3);
                 SettingsCntrl.Size     = new Size(SettingsCntrl.ClientSize.Width, this.ClientSize.Height - (size_of_buttons - 1));
                 SettingsCntrl.BatteryVoltageTextBox.TextChanged += BatteryVoltageTextBox_TextChanged;
             }
@@ -1047,9 +1003,6 @@ namespace UGCS3
             {
                 main_backgroundWorker.RunWorkerAsync();
             }
-            //ParameterNames_TextBox = new TextBox();
-            //ParameterNames_TextBox.Location = new Point(500, 200);
-            //gMapControl.Controls.Add(ParameterNames_TextBox);
         }
 
         /// <summary>
@@ -2565,7 +2518,7 @@ namespace UGCS3
         #endregion
 
 
-        #region SERIAL CONNECTION
+        #region  ******************* SERIAL CONNECTION *********************************
         private bool device_connected()
         {
             return Mavlink_Protocol.get_sp().IsOpen && !Variables.WAITING_FOR_PARAM_LIST;
@@ -2579,8 +2532,6 @@ namespace UGCS3
         private void ComPort_ComboBox_MouseEnter(object sender, EventArgs e)
         {
             string[] portnames = SerialPort.GetPortNames();
-
-            Console.WriteLine(portnames.Length);
             ComPort_ComboBox.Items.Clear();
             ComPort_ComboBox.Items.Add("select comport");
             ComPort_ComboBox.Items.AddRange(portnames);
@@ -2598,13 +2549,13 @@ namespace UGCS3
             {
                 if (SerialConnection.Connect(SerialPortObject, SerialButton, ComPort_ComboBox, BaudRate_ComboBox))
                 {
-                    // Initialise background worker
-                    SerialOpen_Initialise();
+                    // initialise associated components
+                    Serial_Initialise();
                 }
-
                 else if (SerialConnection.DisConnect(SerialPortObject, SerialButton, ComPort_ComboBox, BaudRate_ComboBox))
                 {
-                    SerialClosed_CleanUp();
+                    // close associated components
+                    Serial_Close();
                 }
             }
             catch (Exception ex)
@@ -2617,7 +2568,7 @@ namespace UGCS3
         /// <summary>
         ///  Serial Initialise -> After Serial Button Click
         /// </summary>
-        private void SerialOpen_Initialise()
+        private void Serial_Initialise()
         {
             if (Parameter_Form == null)
             {
@@ -2662,7 +2613,6 @@ namespace UGCS3
             }
             // check for reception of parameters
             Start_TimerEvent(LIST_TIMER_EVENTS.PARAMETER_LIST, 10);
-            //Parameters_Cycle_Counter = 30; // the number of cycles the parameter list event will run on the timer
         }
 
         /// <summary>
@@ -2671,7 +2621,7 @@ namespace UGCS3
         /// main background worker -> dispose first calls cancel async and then nullifies the thread
         /// NB: main background worker is supposed to dispose paramform if closed but it may miss this if inner loop is being polled
         /// </summary>
-        private void SerialClosed_CleanUp()
+        private void Serial_Close()
         {
             if (System_Timer != null)         // dispose Timer everytime we close SerialPort
             {
@@ -2683,14 +2633,13 @@ namespace UGCS3
                 System_Timer.Dispose();
                 System_Timer = null;
             }
-
             dispose_mainBackgroundWorker();
         }
         #endregion
 
 
         #region READ AND WRITE WAYPOINTS
-        bool write_success            = false;
+       // bool write_success            = false;
         private void _bwWayPoints_DoWork(object sender, DoWorkEventArgs e)
         {
             if (reading)
@@ -2762,14 +2711,14 @@ namespace UGCS3
 
                     if (Variables.mission_ack == (byte)MAVLink.MAV_MISSION_RESULT.MAV_MISSION_ACCEPTED)
                     {
-                        write_success = true;
+                        //write_success = true;
                         Variables.ack_message_received = false;
                         MessageBox.Show("Mission Succesfully Uploaded");
                         break;
                     }
                     else if (Variables.mission_ack == (byte)MAVLink.MAV_MISSION_RESULT.MAV_MISSION_NO_SPACE)
                     {
-                        write_success = false;
+                        //write_success = false;
                         Variables.ack_message_received = false;
                         MessageBox.Show("No Space to Store WayPoint");
                         break;
@@ -3813,7 +3762,7 @@ namespace UGCS3
                 {
                     try
                     {
-                        SerialClosed_CleanUp();
+                        Serial_Close();
                         SerialPortObject.Close();
                     }
                     catch (Exception ex)

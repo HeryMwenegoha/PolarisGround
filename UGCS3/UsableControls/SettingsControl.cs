@@ -47,13 +47,11 @@ namespace UGCS3.UsableControls
             {
                 if (Antenna_Connectbutton.Text == "Connect")
                 {
-
                     if (_serialport.IsOpen)
                     {
                         MessageBox.Show("This Comport Cannot be used");
                         return;
                     }
-
                     _serialport.BaudRate = 38400;
                     _serialport.PortName = AntennaComPortcomboBox.Text;
                     _serialport.Open();
@@ -77,7 +75,7 @@ namespace UGCS3.UsableControls
             }
         }
 
-
+        /*
         public void send_gps_raw_int(MAVLink.mavlink_gps_raw_int_t gps_message)
         {
             Mavlink_Protocol.sendPacket(gps_message);
@@ -111,12 +109,12 @@ namespace UGCS3.UsableControls
             msg_ned.y = -10;
             Mavlink_Protocol.sendPacket(msg_ned);
         }
-
+        */
 
 
         public SerialPort _serialport;
         string[] portnames = new string[100];
-        MavLinkSerialPacketClass Mavlink_Protocol;
+        //MavLinkSerialPacketClass Mavlink_Protocol;
         public SettingsControl()
         {
             DoubleBuffered = true;
@@ -132,7 +130,7 @@ namespace UGCS3.UsableControls
             Disposed += SettingsControl_Disposed;
 
             _serialport        = new SerialPort();
-            Mavlink_Protocol = new MavLinkSerialPacketClass(_serialport);
+            //Mavlink_Protocol = new MavLinkSerialPacketClass(_serialport);
 
             portnames   = SerialPort.GetPortNames();
             AntennaComPortcomboBox.Items.Add("Select Port");
@@ -140,10 +138,10 @@ namespace UGCS3.UsableControls
             AntennaComPortcomboBox.SelectedIndex = 0;
             AntennaComPortcomboBox.MouseEnter += AntennaComPortcomboBox_MouseEnter;
             Antenna_Connectbutton.Click += Antenna_Connectbutton_Click;
-            RightPanbutton.Click += RightPanbutton_Click;
-            LeftPanbutton.Click += LeftPanbutton_Click;
-            UpTiltbutton.Click += UpTiltbutton_Click;
-            DownTiltbutton.Click += DownTiltbutton_Click;
+            //RightPanbutton.Click += RightPanbutton_Click;
+            //LeftPanbutton.Click += LeftPanbutton_Click;
+            //UpTiltbutton.Click += UpTiltbutton_Click;
+            //DownTiltbutton.Click += DownTiltbutton_Click;
             
             // Pitch
             PitchProgressBar = new VerticalProgressBar();
