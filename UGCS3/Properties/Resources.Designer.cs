@@ -61,6 +61,16 @@ namespace UGCS3.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon aaso_planner_icon_2015_256x256_ {
+            get {
+                object obj = ResourceManager.GetObject("aaso_planner_icon_2015_256x256_", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap antenna_tracker_button {
@@ -96,6 +106,16 @@ namespace UGCS3.Properties {
         internal static System.Drawing.Bitmap bigstock_UAV_army_drone_flying_for_a_ne_37528018 {
             get {
                 object obj = ResourceManager.GetObject("bigstock_UAV_army_drone_flying_for_a_ne_37528018", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap bigstock_Vintage_compass_on_the_old_wor_87226526 {
+            get {
+                object obj = ResourceManager.GetObject("bigstock_Vintage_compass_on_the_old_wor_87226526", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -236,6 +256,16 @@ namespace UGCS3.Properties {
         internal static System.Drawing.Bitmap plan_mission_status_on_50x50_ {
             get {
                 object obj = ResourceManager.GetObject("plan_mission_status_on_50x50_", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap SplashImage {
+            get {
+                object obj = ResourceManager.GetObject("SplashImage", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

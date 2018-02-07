@@ -1,10 +1,12 @@
-﻿using System;
+﻿/* Hery A Mwenegoha (C) 2017
+ * Compute the Jacobian 
+ * 
+ */ 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-
 using System.Speech.Synthesis;
 namespace UGCS3.INS_Calibration
 {
@@ -17,9 +19,6 @@ namespace UGCS3.INS_Calibration
         float b1 = 0F, b2 = 0F, b3 = 0F, b4 = 500F, b5 = 500F, b6 = 500F;
 #endif
 
-
-
-
         float[,] JtJr =  new float[6,6]
         {
           {0,0,0,0,0,0},
@@ -30,9 +29,7 @@ namespace UGCS3.INS_Calibration
           {0,0,0,0,0,0},
         };
 
-        float[] Jr = {0,0,0,0,0,0};
-
-        
+        float[] Jr = {0,0,0,0,0,0};       
 
         public AccelCalibration()
         {
@@ -92,13 +89,12 @@ namespace UGCS3.INS_Calibration
         {
           for(int col = 0; col<7; col++)
           {
-            float pivmat             =  Hess[pivrow, col];
-            float switchmat 	     =  Hess[switchrow, col];
-            Hess[pivrow ,col]  =  switchmat;
+            float pivmat          =  Hess[pivrow, col];
+            float switchmat 	  =  Hess[switchrow, col];
+            Hess[pivrow ,col]     =  switchmat;
             Hess[switchrow, col]  =  pivmat;			
           }
         }
-
 
 
         // Performs Gaussian elimination with back substitution to solve a system of 6 linear equations
@@ -124,7 +120,7 @@ namespace UGCS3.INS_Calibration
                 Gauss_Matrix[r,6]   = Jr[r];
             }
   	
-            int diag_index     = 0;
+            //int diag_index     = 0;
             const int rows     = 6;
             const int columns  = 7;
             int pivrow         = 0;  // the row to be moved from its position to switchrow.
@@ -230,8 +226,7 @@ namespace UGCS3.INS_Calibration
             float change          = 100;
  
             while(num_of_iterations-- > 0 && change > eps)
-            {
-    
+            {  
                 // reset all matrices  
                 reset_matrices();
     
@@ -305,8 +300,11 @@ namespace UGCS3.INS_Calibration
 
         }
 
-
-       
+        // This is the Top most function called by the user [Public]
+        // Prompt user to place the vehicle on the axis we want to collect.
+        // 20 samples are collected over each axis leading to 120 samples per axis for a 6 point calibration  
+        // 100ms delay is meant to address the deliberate delay in data transmission [10Hz]
+        // The samples collected as axis vectors are passed over to the function f(Calibrate_Accelerometer) which performs the actual calibration
         public void Sample_Processing()
         {
             int x                 = 0;
@@ -319,8 +317,6 @@ namespace UGCS3.INS_Calibration
             Int16[] zvector = new Int16[120];
 
             // NED - TRUE
-
-
             SpeechSynthesizer _speech = new SpeechSynthesizer();
            
             _speech.SpeakAsync("Place vehicle level and press any key");   // 
@@ -411,12 +407,7 @@ namespace UGCS3.INS_Calibration
             // calibrate accelerometer
             calibrate_accelerometer(xvector, yvector, zvector);
 
-            _speech.Dispose();
-            
+            _speech.Dispose();        
         }
-
-
-
-        
     }
 }

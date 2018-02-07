@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2013 for Windows Desktop
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UGCS3", "UGCS3\UGCS3.csproj", "{AB12218A-F685-4197-8320-8CA64BDBBF36}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2D9542D4-5158-40FE-B2E4-4B028991DD0E}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "..\SetupWizard\Setup\Setup.vdproj", "{574AF0FB-CF63-4535-9CE4-900E8E95B140}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,8 @@ Global
 		{AB12218A-F685-4197-8320-8CA64BDBBF36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB12218A-F685-4197-8320-8CA64BDBBF36}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB12218A-F685-4197-8320-8CA64BDBBF36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{574AF0FB-CF63-4535-9CE4-900E8E95B140}.Debug|Any CPU.ActiveCfg = Debug
+		{574AF0FB-CF63-4535-9CE4-900E8E95B140}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

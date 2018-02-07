@@ -22,6 +22,12 @@ namespace UGCS3.HIL.Xplane10
            
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="add"></param>
+        /// <param name="recport"></param> port of the simulator sending the data...
+        /// <param name="sendport"></param> port of the PC sending the data
         public void connect(string add, int recport, int sendport)
         {
             // reception
@@ -29,7 +35,7 @@ namespace UGCS3.HIL.Xplane10
             // we will be listening to any IPaddress but on the reception port -> set the simulator PC port to recport
             IPEndPoint ipend = new IPEndPoint(IPAddress.Any, recport);
             receiveClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
+          
             if (!receiveClient.IsBound)
             {
                 receiveClient.Bind(ipend);
@@ -85,6 +91,7 @@ namespace UGCS3.HIL.Xplane10
         {
             if (!receiveClient.IsBound)
                 return;
+
             if (receiveClient.Available > 0)
             {
                 byte[] udpdata = new byte[1500];
@@ -108,7 +115,6 @@ namespace UGCS3.HIL.Xplane10
                     {
                         int index = BitConverter.ToInt32(udpdata, count);
                         DATA[index] = new float[8];
-
                         DATA[index][0] = BitConverter.ToSingle(udpdata, count + 1 * 4); ;
                         DATA[index][1] = BitConverter.ToSingle(udpdata, count + 2 * 4); ;
                         DATA[index][2] = BitConverter.ToSingle(udpdata, count + 3 * 4); ;
@@ -117,15 +123,13 @@ namespace UGCS3.HIL.Xplane10
                         DATA[index][5] = BitConverter.ToSingle(udpdata, count + 6 * 4); ;
                         DATA[index][6] = BitConverter.ToSingle(udpdata, count + 7 * 4); ;
                         DATA[index][7] = BitConverter.ToSingle(udpdata, count + 8 * 4); ;
-
                         count         += 36; // 8 * float  
                     }
-
-                    
+                                  
                     sitldata.pitchDeg  = (DATA[17][0]);
                     sitldata.rollDeg   = (DATA[17][1]);
                     sitldata.yawDeg    = (DATA[17][3]); // True heading - [2] | Mag Heading - [3] RANGE 0 -360
-                 
+             
                     if(sitldata.yawDeg > 180)
                     {
                         sitldata.yawDeg = sitldata.yawDeg - 360; // CONVERTS YAW TO +/- 180 DEGREES
@@ -138,9 +142,7 @@ namespace UGCS3.HIL.Xplane10
                     sitldata.pitchRate = (DATA[16][0] * rad2deg);
                     sitldata.rollRate  = (DATA[16][1] * rad2deg);
                     sitldata.yawRate   = (DATA[16][2] * rad2deg);
-                    sitldata.heading   = (DATA[18][2]); // equivalent to HPATH GPS course
-                    
-
+                    sitldata.heading   = (DATA[18][2]); // equivalent to HPATH GPS course                  
                     sitldata.airspeed = ((DATA[3][5] * .44704)); // miles per hour true airspeed to m/s
 
                     sitldata.latitude  = (DATA[20][0]);
@@ -150,7 +152,6 @@ namespace UGCS3.HIL.Xplane10
                     // North is -ve Z and East is +ve X
                     sitldata.speedN = -DATA[21][5]; // (DATA[3][7] * 0.44704 * Math.Sin(sitldata.heading * deg2rad));
                     sitldata.speedE = DATA[21][3]; // (DATA[3][7] * 0.44704 * Math.Cos(sitldata.heading * deg2rad));
-
 
                     // rad = tas^2 / (tan(angle) * G)
                     float turnrad = (float)(((DATA[3][7] * 0.44704) * (DATA[3][7] * 0.44704)) / (float)(9.8f * Math.Tan(sitldata.rollDeg * deg2rad)));
@@ -199,7 +200,6 @@ namespace UGCS3.HIL.Xplane10
             Xplane[4] = 0;
 
             Array.Copy(BitConverter.GetBytes((int)25), 0, Xplane, 5, 4); // packet index
-
             Array.Copy(BitConverter.GetBytes((float)throttle_out), 0, Xplane, 9, 4); // start data
             Array.Copy(BitConverter.GetBytes((float)throttle_out), 0, Xplane, 13, 4);
             Array.Copy(BitConverter.GetBytes((float)throttle_out), 0, Xplane, 17, 4);

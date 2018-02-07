@@ -28,43 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.MainPanel = new System.Windows.Forms.Panel();
             this.GraphGroupBox = new System.Windows.Forms.GroupBox();
+            this.flickerFreePanel1 = new UGCS3.Common.FlickerFreePanel();
+            this.label12 = new System.Windows.Forms.Label();
+            this.BatteryVoltageTextBox = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.BatteryGainTextBox = new System.Windows.Forms.TextBox();
+            this.BatteryAnalogTextBox = new System.Windows.Forms.TextBox();
+            this.plotLatLng_button = new System.Windows.Forms.Button();
             this.millisecondsLabel = new System.Windows.Forms.Label();
             this.TimeOffsetTextBox = new System.Windows.Forms.TextBox();
-            this.panel5 = new System.Windows.Forms.Panel();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.Antenna_Connectbutton = new System.Windows.Forms.Button();
-            this.AntennaComPortcomboBox = new System.Windows.Forms.ComboBox();
-            this.DownTiltbutton = new System.Windows.Forms.Button();
-            this.RightPanbutton = new System.Windows.Forms.Button();
-            this.UpTiltbutton = new System.Windows.Forms.Button();
-            this.LeftPanbutton = new System.Windows.Forms.Button();
             this.Parameter_button = new System.Windows.Forms.Button();
             this.log_button = new System.Windows.Forms.Button();
-            this.accZ_checkBox = new System.Windows.Forms.CheckBox();
-            this.accY_checkBox = new System.Windows.Forms.CheckBox();
-            this.accX_checkBox = new System.Windows.Forms.CheckBox();
-            this.climbrate_checkBox = new System.Windows.Forms.CheckBox();
-            this.altitude_CheckBox = new System.Windows.Forms.CheckBox();
             this.camera_comboBox = new System.Windows.Forms.ComboBox();
             this.camera_button = new System.Windows.Forms.Button();
             this.metadata_button = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.BatteryVoltageTextBox = new System.Windows.Forms.TextBox();
-            this.label11 = new System.Windows.Forms.Label();
-            this.BatteryGainTextBox = new System.Windows.Forms.TextBox();
-            this.BatteryAnalogTextBox = new System.Windows.Forms.TextBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
-            this.YawRateCheckBox = new System.Windows.Forms.CheckBox();
-            this.PitchRateCheckBox = new System.Windows.Forms.CheckBox();
-            this.RollRateCheckBox = new System.Windows.Forms.CheckBox();
-            this.PitchCheckBox = new System.Windows.Forms.CheckBox();
-            this.AllRatesCheckBox = new System.Windows.Forms.CheckBox();
-            this.RollCheckBox = new System.Windows.Forms.CheckBox();
-            this.YawCheckBox = new System.Windows.Forms.CheckBox();
-            this.AhrsCheckBox = new System.Windows.Forms.CheckBox();
             this.ZedGraphPane = new ZedGraph.ZedGraphControl();
             this.RadioGroupBox = new System.Windows.Forms.GroupBox();
             this.INS_Calibrate_Button = new System.Windows.Forms.Button();
@@ -100,12 +82,9 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.SimIpTextBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.plotLatLng_button = new System.Windows.Forms.Button();
             this.MainPanel.SuspendLayout();
             this.GraphGroupBox.SuspendLayout();
-            this.panel5.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            this.groupBox1.SuspendLayout();
+            this.flickerFreePanel1.SuspendLayout();
             this.RadioGroupBox.SuspendLayout();
             this.ThrottleYawRadioPanel.SuspendLayout();
             this.RollPitchRadioPanel.SuspendLayout();
@@ -124,49 +103,123 @@
             this.MainPanel.Location = new System.Drawing.Point(4, 4);
             this.MainPanel.Margin = new System.Windows.Forms.Padding(4);
             this.MainPanel.Name = "MainPanel";
-            this.MainPanel.Size = new System.Drawing.Size(912, 835);
+            this.MainPanel.Size = new System.Drawing.Size(912, 753);
             this.MainPanel.TabIndex = 0;
             // 
             // GraphGroupBox
             // 
+            this.GraphGroupBox.Controls.Add(this.flickerFreePanel1);
             this.GraphGroupBox.Controls.Add(this.plotLatLng_button);
             this.GraphGroupBox.Controls.Add(this.millisecondsLabel);
             this.GraphGroupBox.Controls.Add(this.TimeOffsetTextBox);
-            this.GraphGroupBox.Controls.Add(this.panel5);
             this.GraphGroupBox.Controls.Add(this.Parameter_button);
             this.GraphGroupBox.Controls.Add(this.log_button);
-            this.GraphGroupBox.Controls.Add(this.accZ_checkBox);
-            this.GraphGroupBox.Controls.Add(this.accY_checkBox);
-            this.GraphGroupBox.Controls.Add(this.accX_checkBox);
-            this.GraphGroupBox.Controls.Add(this.climbrate_checkBox);
-            this.GraphGroupBox.Controls.Add(this.altitude_CheckBox);
             this.GraphGroupBox.Controls.Add(this.camera_comboBox);
             this.GraphGroupBox.Controls.Add(this.camera_button);
             this.GraphGroupBox.Controls.Add(this.metadata_button);
-            this.GraphGroupBox.Controls.Add(this.groupBox1);
-            this.GraphGroupBox.Controls.Add(this.YawRateCheckBox);
-            this.GraphGroupBox.Controls.Add(this.PitchRateCheckBox);
-            this.GraphGroupBox.Controls.Add(this.RollRateCheckBox);
-            this.GraphGroupBox.Controls.Add(this.PitchCheckBox);
-            this.GraphGroupBox.Controls.Add(this.AllRatesCheckBox);
-            this.GraphGroupBox.Controls.Add(this.RollCheckBox);
-            this.GraphGroupBox.Controls.Add(this.YawCheckBox);
-            this.GraphGroupBox.Controls.Add(this.AhrsCheckBox);
             this.GraphGroupBox.Controls.Add(this.ZedGraphPane);
             this.GraphGroupBox.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.GraphGroupBox.Location = new System.Drawing.Point(4, 214);
+            this.GraphGroupBox.Location = new System.Drawing.Point(4, 211);
             this.GraphGroupBox.Margin = new System.Windows.Forms.Padding(4);
             this.GraphGroupBox.Name = "GraphGroupBox";
             this.GraphGroupBox.Padding = new System.Windows.Forms.Padding(4);
-            this.GraphGroupBox.Size = new System.Drawing.Size(904, 600);
+            this.GraphGroupBox.Size = new System.Drawing.Size(904, 496);
             this.GraphGroupBox.TabIndex = 3;
             this.GraphGroupBox.TabStop = false;
             this.GraphGroupBox.Text = "Graph Plane";
             // 
+            // flickerFreePanel1
+            // 
+            this.flickerFreePanel1.Controls.Add(this.label12);
+            this.flickerFreePanel1.Controls.Add(this.BatteryVoltageTextBox);
+            this.flickerFreePanel1.Controls.Add(this.label9);
+            this.flickerFreePanel1.Controls.Add(this.label11);
+            this.flickerFreePanel1.Controls.Add(this.label10);
+            this.flickerFreePanel1.Controls.Add(this.BatteryGainTextBox);
+            this.flickerFreePanel1.Controls.Add(this.BatteryAnalogTextBox);
+            this.flickerFreePanel1.Location = new System.Drawing.Point(624, 383);
+            this.flickerFreePanel1.Name = "flickerFreePanel1";
+            this.flickerFreePanel1.Size = new System.Drawing.Size(272, 100);
+            this.flickerFreePanel1.TabIndex = 17;
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(81, 3);
+            this.label12.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(97, 17);
+            this.label12.TabIndex = 4;
+            this.label12.Text = "Power Module";
+            // 
+            // BatteryVoltageTextBox
+            // 
+            this.BatteryVoltageTextBox.Location = new System.Drawing.Point(194, 29);
+            this.BatteryVoltageTextBox.Margin = new System.Windows.Forms.Padding(4);
+            this.BatteryVoltageTextBox.Name = "BatteryVoltageTextBox";
+            this.BatteryVoltageTextBox.Size = new System.Drawing.Size(61, 22);
+            this.BatteryVoltageTextBox.TabIndex = 3;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(5, 32);
+            this.label9.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(64, 17);
+            this.label9.TabIndex = 0;
+            this.label9.Text = "Incoming";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(167, 32);
+            this.label11.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(17, 17);
+            this.label11.TabIndex = 2;
+            this.label11.Text = "V";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(8, 73);
+            this.label10.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(38, 17);
+            this.label10.TabIndex = 0;
+            this.label10.Text = "Gain";
+            // 
+            // BatteryGainTextBox
+            // 
+            this.BatteryGainTextBox.Location = new System.Drawing.Point(87, 68);
+            this.BatteryGainTextBox.Margin = new System.Windows.Forms.Padding(4);
+            this.BatteryGainTextBox.Name = "BatteryGainTextBox";
+            this.BatteryGainTextBox.Size = new System.Drawing.Size(61, 22);
+            this.BatteryGainTextBox.TabIndex = 1;
+            // 
+            // BatteryAnalogTextBox
+            // 
+            this.BatteryAnalogTextBox.Location = new System.Drawing.Point(88, 29);
+            this.BatteryAnalogTextBox.Margin = new System.Windows.Forms.Padding(4);
+            this.BatteryAnalogTextBox.Name = "BatteryAnalogTextBox";
+            this.BatteryAnalogTextBox.Size = new System.Drawing.Size(61, 22);
+            this.BatteryAnalogTextBox.TabIndex = 1;
+            // 
+            // plotLatLng_button
+            // 
+            this.plotLatLng_button.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.plotLatLng_button.Location = new System.Drawing.Point(6, 446);
+            this.plotLatLng_button.Name = "plotLatLng_button";
+            this.plotLatLng_button.Size = new System.Drawing.Size(101, 37);
+            this.plotLatLng_button.TabIndex = 16;
+            this.plotLatLng_button.Text = "Plot LatLng";
+            this.plotLatLng_button.UseVisualStyleBackColor = true;
+            // 
             // millisecondsLabel
             // 
             this.millisecondsLabel.AutoSize = true;
-            this.millisecondsLabel.Location = new System.Drawing.Point(506, 489);
+            this.millisecondsLabel.Location = new System.Drawing.Point(534, 392);
             this.millisecondsLabel.Name = "millisecondsLabel";
             this.millisecondsLabel.Size = new System.Drawing.Size(84, 17);
             this.millisecondsLabel.TabIndex = 15;
@@ -174,107 +227,19 @@
             // 
             // TimeOffsetTextBox
             // 
-            this.TimeOffsetTextBox.Location = new System.Drawing.Point(434, 486);
+            this.TimeOffsetTextBox.Location = new System.Drawing.Point(452, 390);
             this.TimeOffsetTextBox.Name = "TimeOffsetTextBox";
             this.TimeOffsetTextBox.Size = new System.Drawing.Size(66, 22);
             this.TimeOffsetTextBox.TabIndex = 14;
             this.TimeOffsetTextBox.Text = "0 ";
             this.TimeOffsetTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // panel5
-            // 
-            this.panel5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel5.Controls.Add(this.pictureBox1);
-            this.panel5.Controls.Add(this.Antenna_Connectbutton);
-            this.panel5.Controls.Add(this.AntennaComPortcomboBox);
-            this.panel5.Controls.Add(this.DownTiltbutton);
-            this.panel5.Controls.Add(this.RightPanbutton);
-            this.panel5.Controls.Add(this.UpTiltbutton);
-            this.panel5.Controls.Add(this.LeftPanbutton);
-            this.panel5.Location = new System.Drawing.Point(594, 466);
-            this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(303, 80);
-            this.panel5.TabIndex = 13;
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Image = global::UGCS3.Properties.Resources.antenna_tracker_button;
-            this.pictureBox1.InitialImage = global::UGCS3.Properties.Resources.antenna_tracker_button;
-            this.pictureBox1.Location = new System.Drawing.Point(99, 7);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(64, 64);
-            this.pictureBox1.TabIndex = 16;
-            this.pictureBox1.TabStop = false;
-            // 
-            // Antenna_Connectbutton
-            // 
-            this.Antenna_Connectbutton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.Antenna_Connectbutton.Location = new System.Drawing.Point(184, 43);
-            this.Antenna_Connectbutton.Name = "Antenna_Connectbutton";
-            this.Antenna_Connectbutton.Size = new System.Drawing.Size(107, 29);
-            this.Antenna_Connectbutton.TabIndex = 14;
-            this.Antenna_Connectbutton.Text = "Connect";
-            this.Antenna_Connectbutton.UseVisualStyleBackColor = true;
-            // 
-            // AntennaComPortcomboBox
-            // 
-            this.AntennaComPortcomboBox.FormattingEnabled = true;
-            this.AntennaComPortcomboBox.Location = new System.Drawing.Point(183, 5);
-            this.AntennaComPortcomboBox.Name = "AntennaComPortcomboBox";
-            this.AntennaComPortcomboBox.Size = new System.Drawing.Size(107, 24);
-            this.AntennaComPortcomboBox.TabIndex = 15;
-            // 
-            // DownTiltbutton
-            // 
-            this.DownTiltbutton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.DownTiltbutton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.DownTiltbutton.Location = new System.Drawing.Point(29, 50);
-            this.DownTiltbutton.Name = "DownTiltbutton";
-            this.DownTiltbutton.Size = new System.Drawing.Size(27, 27);
-            this.DownTiltbutton.TabIndex = 3;
-            this.DownTiltbutton.Text = "V";
-            this.DownTiltbutton.UseVisualStyleBackColor = true;
-            // 
-            // RightPanbutton
-            // 
-            this.RightPanbutton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.RightPanbutton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.RightPanbutton.Location = new System.Drawing.Point(60, 24);
-            this.RightPanbutton.Name = "RightPanbutton";
-            this.RightPanbutton.Size = new System.Drawing.Size(23, 26);
-            this.RightPanbutton.TabIndex = 2;
-            this.RightPanbutton.Text = ">";
-            this.RightPanbutton.UseVisualStyleBackColor = true;
-            // 
-            // UpTiltbutton
-            // 
-            this.UpTiltbutton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.UpTiltbutton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.UpTiltbutton.Location = new System.Drawing.Point(29, 4);
-            this.UpTiltbutton.Name = "UpTiltbutton";
-            this.UpTiltbutton.Size = new System.Drawing.Size(27, 25);
-            this.UpTiltbutton.TabIndex = 1;
-            this.UpTiltbutton.Text = "Λ";
-            this.UpTiltbutton.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.UpTiltbutton.UseVisualStyleBackColor = true;
-            // 
-            // LeftPanbutton
-            // 
-            this.LeftPanbutton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LeftPanbutton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.LeftPanbutton.Location = new System.Drawing.Point(3, 25);
-            this.LeftPanbutton.Name = "LeftPanbutton";
-            this.LeftPanbutton.Size = new System.Drawing.Size(23, 25);
-            this.LeftPanbutton.TabIndex = 0;
-            this.LeftPanbutton.Text = "<";
-            this.LeftPanbutton.UseVisualStyleBackColor = true;
-            // 
             // Parameter_button
             // 
             this.Parameter_button.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.Parameter_button.Location = new System.Drawing.Point(308, 486);
+            this.Parameter_button.Location = new System.Drawing.Point(113, 446);
             this.Parameter_button.Name = "Parameter_button";
-            this.Parameter_button.Size = new System.Drawing.Size(101, 27);
+            this.Parameter_button.Size = new System.Drawing.Size(151, 37);
             this.Parameter_button.TabIndex = 12;
             this.Parameter_button.Text = "Parameter";
             this.Parameter_button.UseVisualStyleBackColor = true;
@@ -282,72 +247,17 @@
             // log_button
             // 
             this.log_button.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.log_button.Location = new System.Drawing.Point(434, 519);
+            this.log_button.Location = new System.Drawing.Point(327, 446);
             this.log_button.Name = "log_button";
-            this.log_button.Size = new System.Drawing.Size(101, 27);
+            this.log_button.Size = new System.Drawing.Size(101, 35);
             this.log_button.TabIndex = 11;
             this.log_button.Text = "log";
             this.log_button.UseVisualStyleBackColor = true;
             // 
-            // accZ_checkBox
-            // 
-            this.accZ_checkBox.AutoSize = true;
-            this.accZ_checkBox.Location = new System.Drawing.Point(317, 467);
-            this.accZ_checkBox.Margin = new System.Windows.Forms.Padding(4);
-            this.accZ_checkBox.Name = "accZ_checkBox";
-            this.accZ_checkBox.Size = new System.Drawing.Size(101, 21);
-            this.accZ_checkBox.TabIndex = 10;
-            this.accZ_checkBox.Text = "accZ(m/s2)";
-            this.accZ_checkBox.UseVisualStyleBackColor = true;
-            // 
-            // accY_checkBox
-            // 
-            this.accY_checkBox.AutoSize = true;
-            this.accY_checkBox.Location = new System.Drawing.Point(149, 467);
-            this.accY_checkBox.Margin = new System.Windows.Forms.Padding(4);
-            this.accY_checkBox.Name = "accY_checkBox";
-            this.accY_checkBox.Size = new System.Drawing.Size(101, 21);
-            this.accY_checkBox.TabIndex = 9;
-            this.accY_checkBox.Text = "accY(m/s2)";
-            this.accY_checkBox.UseVisualStyleBackColor = true;
-            // 
-            // accX_checkBox
-            // 
-            this.accX_checkBox.AutoSize = true;
-            this.accX_checkBox.Location = new System.Drawing.Point(4, 467);
-            this.accX_checkBox.Margin = new System.Windows.Forms.Padding(4);
-            this.accX_checkBox.Name = "accX_checkBox";
-            this.accX_checkBox.Size = new System.Drawing.Size(105, 21);
-            this.accX_checkBox.TabIndex = 6;
-            this.accX_checkBox.Text = "accX (m/s2)";
-            this.accX_checkBox.UseVisualStyleBackColor = true;
-            // 
-            // climbrate_checkBox
-            // 
-            this.climbrate_checkBox.AutoSize = true;
-            this.climbrate_checkBox.Location = new System.Drawing.Point(149, 443);
-            this.climbrate_checkBox.Margin = new System.Windows.Forms.Padding(4);
-            this.climbrate_checkBox.Name = "climbrate_checkBox";
-            this.climbrate_checkBox.Size = new System.Drawing.Size(126, 21);
-            this.climbrate_checkBox.TabIndex = 7;
-            this.climbrate_checkBox.Text = "climbrate(cm/s)";
-            this.climbrate_checkBox.UseVisualStyleBackColor = true;
-            // 
-            // altitude_CheckBox
-            // 
-            this.altitude_CheckBox.AutoSize = true;
-            this.altitude_CheckBox.Location = new System.Drawing.Point(4, 443);
-            this.altitude_CheckBox.Margin = new System.Windows.Forms.Padding(4);
-            this.altitude_CheckBox.Name = "altitude_CheckBox";
-            this.altitude_CheckBox.Size = new System.Drawing.Size(67, 21);
-            this.altitude_CheckBox.TabIndex = 8;
-            this.altitude_CheckBox.Text = "Alt(m)";
-            this.altitude_CheckBox.UseVisualStyleBackColor = true;
-            // 
             // camera_comboBox
             // 
             this.camera_comboBox.FormattingEnabled = true;
-            this.camera_comboBox.Location = new System.Drawing.Point(109, 524);
+            this.camera_comboBox.Location = new System.Drawing.Point(111, 387);
             this.camera_comboBox.Name = "camera_comboBox";
             this.camera_comboBox.Size = new System.Drawing.Size(151, 24);
             this.camera_comboBox.TabIndex = 5;
@@ -355,7 +265,7 @@
             // camera_button
             // 
             this.camera_button.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.camera_button.Location = new System.Drawing.Point(4, 519);
+            this.camera_button.Location = new System.Drawing.Point(6, 387);
             this.camera_button.Name = "camera_button";
             this.camera_button.Size = new System.Drawing.Size(99, 33);
             this.camera_button.TabIndex = 4;
@@ -365,182 +275,28 @@
             // metadata_button
             // 
             this.metadata_button.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.metadata_button.Location = new System.Drawing.Point(307, 519);
+            this.metadata_button.Location = new System.Drawing.Point(327, 387);
             this.metadata_button.Name = "metadata_button";
             this.metadata_button.Size = new System.Drawing.Size(105, 28);
             this.metadata_button.TabIndex = 3;
             this.metadata_button.Text = "Metadata";
             this.metadata_button.UseVisualStyleBackColor = true;
             // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.BatteryVoltageTextBox);
-            this.groupBox1.Controls.Add(this.label11);
-            this.groupBox1.Controls.Add(this.BatteryGainTextBox);
-            this.groupBox1.Controls.Add(this.BatteryAnalogTextBox);
-            this.groupBox1.Controls.Add(this.label10);
-            this.groupBox1.Controls.Add(this.label9);
-            this.groupBox1.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.groupBox1.Location = new System.Drawing.Point(653, 377);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(243, 87);
-            this.groupBox1.TabIndex = 2;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Battery (Power Module)";
-            // 
-            // BatteryVoltageTextBox
-            // 
-            this.BatteryVoltageTextBox.Location = new System.Drawing.Point(177, 15);
-            this.BatteryVoltageTextBox.Margin = new System.Windows.Forms.Padding(4);
-            this.BatteryVoltageTextBox.Name = "BatteryVoltageTextBox";
-            this.BatteryVoltageTextBox.Size = new System.Drawing.Size(61, 22);
-            this.BatteryVoltageTextBox.TabIndex = 3;
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(148, 21);
-            this.label11.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(17, 17);
-            this.label11.TabIndex = 2;
-            this.label11.Text = "V";
-            // 
-            // BatteryGainTextBox
-            // 
-            this.BatteryGainTextBox.Location = new System.Drawing.Point(77, 57);
-            this.BatteryGainTextBox.Margin = new System.Windows.Forms.Padding(4);
-            this.BatteryGainTextBox.Name = "BatteryGainTextBox";
-            this.BatteryGainTextBox.Size = new System.Drawing.Size(61, 22);
-            this.BatteryGainTextBox.TabIndex = 1;
-            // 
-            // BatteryAnalogTextBox
-            // 
-            this.BatteryAnalogTextBox.Location = new System.Drawing.Point(77, 18);
-            this.BatteryAnalogTextBox.Margin = new System.Windows.Forms.Padding(4);
-            this.BatteryAnalogTextBox.Name = "BatteryAnalogTextBox";
-            this.BatteryAnalogTextBox.Size = new System.Drawing.Size(61, 22);
-            this.BatteryAnalogTextBox.TabIndex = 1;
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(11, 62);
-            this.label10.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(38, 17);
-            this.label10.TabIndex = 0;
-            this.label10.Text = "Gain";
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(11, 23);
-            this.label9.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(64, 17);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "Incoming";
-            // 
-            // YawRateCheckBox
-            // 
-            this.YawRateCheckBox.AutoSize = true;
-            this.YawRateCheckBox.Location = new System.Drawing.Point(493, 418);
-            this.YawRateCheckBox.Margin = new System.Windows.Forms.Padding(4);
-            this.YawRateCheckBox.Name = "YawRateCheckBox";
-            this.YawRateCheckBox.Size = new System.Drawing.Size(151, 21);
-            this.YawRateCheckBox.TabIndex = 1;
-            this.YawRateCheckBox.Text = "Yaw Rate (rad/sec)";
-            this.YawRateCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // PitchRateCheckBox
-            // 
-            this.PitchRateCheckBox.AutoSize = true;
-            this.PitchRateCheckBox.Location = new System.Drawing.Point(317, 418);
-            this.PitchRateCheckBox.Margin = new System.Windows.Forms.Padding(4);
-            this.PitchRateCheckBox.Name = "PitchRateCheckBox";
-            this.PitchRateCheckBox.Size = new System.Drawing.Size(156, 21);
-            this.PitchRateCheckBox.TabIndex = 1;
-            this.PitchRateCheckBox.Text = "Pitch Rate (rad/sec)";
-            this.PitchRateCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // RollRateCheckBox
-            // 
-            this.RollRateCheckBox.AutoSize = true;
-            this.RollRateCheckBox.Location = new System.Drawing.Point(149, 418);
-            this.RollRateCheckBox.Margin = new System.Windows.Forms.Padding(4);
-            this.RollRateCheckBox.Name = "RollRateCheckBox";
-            this.RollRateCheckBox.Size = new System.Drawing.Size(149, 21);
-            this.RollRateCheckBox.TabIndex = 1;
-            this.RollRateCheckBox.Text = "Roll Rate (rad/sec)";
-            this.RollRateCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // PitchCheckBox
-            // 
-            this.PitchCheckBox.AutoSize = true;
-            this.PitchCheckBox.Location = new System.Drawing.Point(316, 391);
-            this.PitchCheckBox.Margin = new System.Windows.Forms.Padding(4);
-            this.PitchCheckBox.Name = "PitchCheckBox";
-            this.PitchCheckBox.Size = new System.Drawing.Size(96, 21);
-            this.PitchCheckBox.TabIndex = 1;
-            this.PitchCheckBox.Text = "Pitch (rad)";
-            this.PitchCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // AllRatesCheckBox
-            // 
-            this.AllRatesCheckBox.AutoSize = true;
-            this.AllRatesCheckBox.Location = new System.Drawing.Point(4, 418);
-            this.AllRatesCheckBox.Margin = new System.Windows.Forms.Padding(4);
-            this.AllRatesCheckBox.Name = "AllRatesCheckBox";
-            this.AllRatesCheckBox.Size = new System.Drawing.Size(128, 21);
-            this.AllRatesCheckBox.TabIndex = 1;
-            this.AllRatesCheckBox.Text = "Rates (rad/sec)";
-            this.AllRatesCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // RollCheckBox
-            // 
-            this.RollCheckBox.AutoSize = true;
-            this.RollCheckBox.Location = new System.Drawing.Point(148, 391);
-            this.RollCheckBox.Margin = new System.Windows.Forms.Padding(4);
-            this.RollCheckBox.Name = "RollCheckBox";
-            this.RollCheckBox.Size = new System.Drawing.Size(89, 21);
-            this.RollCheckBox.TabIndex = 1;
-            this.RollCheckBox.Text = "Roll (rad)";
-            this.RollCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // YawCheckBox
-            // 
-            this.YawCheckBox.AutoSize = true;
-            this.YawCheckBox.Location = new System.Drawing.Point(492, 391);
-            this.YawCheckBox.Margin = new System.Windows.Forms.Padding(4);
-            this.YawCheckBox.Name = "YawCheckBox";
-            this.YawCheckBox.Size = new System.Drawing.Size(91, 21);
-            this.YawCheckBox.TabIndex = 1;
-            this.YawCheckBox.Text = "Yaw (rad)";
-            this.YawCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // AhrsCheckBox
-            // 
-            this.AhrsCheckBox.AutoSize = true;
-            this.AhrsCheckBox.Location = new System.Drawing.Point(4, 391);
-            this.AhrsCheckBox.Margin = new System.Windows.Forms.Padding(4);
-            this.AhrsCheckBox.Name = "AhrsCheckBox";
-            this.AhrsCheckBox.Size = new System.Drawing.Size(94, 21);
-            this.AhrsCheckBox.TabIndex = 1;
-            this.AhrsCheckBox.Text = "Ahrs (rad)";
-            this.AhrsCheckBox.UseVisualStyleBackColor = true;
-            // 
             // ZedGraphPane
             // 
-            this.ZedGraphPane.IsShowPointValues = false;
             this.ZedGraphPane.Location = new System.Drawing.Point(4, 23);
-            this.ZedGraphPane.Margin = new System.Windows.Forms.Padding(4);
+            this.ZedGraphPane.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.ZedGraphPane.Name = "ZedGraphPane";
-            this.ZedGraphPane.PointValueFormat = "G";
+            this.ZedGraphPane.ScrollGrace = 0D;
+            this.ZedGraphPane.ScrollMaxX = 0D;
+            this.ZedGraphPane.ScrollMaxY = 0D;
+            this.ZedGraphPane.ScrollMaxY2 = 0D;
+            this.ZedGraphPane.ScrollMinX = 0D;
+            this.ZedGraphPane.ScrollMinY = 0D;
+            this.ZedGraphPane.ScrollMinY2 = 0D;
             this.ZedGraphPane.Size = new System.Drawing.Size(892, 348);
             this.ZedGraphPane.TabIndex = 0;
+            this.ZedGraphPane.UseExtendedPrintDialog = true;
             // 
             // RadioGroupBox
             // 
@@ -597,7 +353,7 @@
             // ThrLabel
             // 
             this.ThrLabel.AutoSize = true;
-            this.ThrLabel.Location = new System.Drawing.Point(19, 149);
+            this.ThrLabel.Location = new System.Drawing.Point(14, 149);
             this.ThrLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.ThrLabel.Name = "ThrLabel";
             this.ThrLabel.Size = new System.Drawing.Size(40, 17);
@@ -608,7 +364,7 @@
             // YawLabel
             // 
             this.YawLabel.AutoSize = true;
-            this.YawLabel.Location = new System.Drawing.Point(19, 37);
+            this.YawLabel.Location = new System.Drawing.Point(14, 37);
             this.YawLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.YawLabel.Name = "YawLabel";
             this.YawLabel.Size = new System.Drawing.Size(40, 17);
@@ -666,7 +422,7 @@
             // PtchLabel
             // 
             this.PtchLabel.AutoSize = true;
-            this.PtchLabel.Location = new System.Drawing.Point(21, 149);
+            this.PtchLabel.Location = new System.Drawing.Point(16, 149);
             this.PtchLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.PtchLabel.Name = "PtchLabel";
             this.PtchLabel.Size = new System.Drawing.Size(40, 17);
@@ -676,7 +432,7 @@
             // RollLabel
             // 
             this.RollLabel.AutoSize = true;
-            this.RollLabel.Location = new System.Drawing.Point(21, 37);
+            this.RollLabel.Location = new System.Drawing.Point(16, 37);
             this.RollLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.RollLabel.Name = "RollLabel";
             this.RollLabel.Size = new System.Drawing.Size(40, 17);
@@ -921,16 +677,6 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "SimIP";
             // 
-            // plotLatLng_button
-            // 
-            this.plotLatLng_button.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.plotLatLng_button.Location = new System.Drawing.Point(4, 489);
-            this.plotLatLng_button.Name = "plotLatLng_button";
-            this.plotLatLng_button.Size = new System.Drawing.Size(101, 27);
-            this.plotLatLng_button.TabIndex = 16;
-            this.plotLatLng_button.Text = "Plot LatLng";
-            this.plotLatLng_button.UseVisualStyleBackColor = true;
-            // 
             // SettingsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -938,14 +684,12 @@
             this.Controls.Add(this.MainPanel);
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "SettingsControl";
-            this.Size = new System.Drawing.Size(920, 850);
+            this.Size = new System.Drawing.Size(920, 709);
             this.MainPanel.ResumeLayout(false);
             this.GraphGroupBox.ResumeLayout(false);
             this.GraphGroupBox.PerformLayout();
-            this.panel5.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.flickerFreePanel1.ResumeLayout(false);
+            this.flickerFreePanel1.PerformLayout();
             this.RadioGroupBox.ResumeLayout(false);
             this.ThrottleYawRadioPanel.ResumeLayout(false);
             this.ThrottleYawRadioPanel.PerformLayout();
@@ -1003,15 +747,6 @@
         private System.Windows.Forms.Label RollLabel;
         private System.Windows.Forms.GroupBox GraphGroupBox;
         private ZedGraph.ZedGraphControl ZedGraphPane;
-        private System.Windows.Forms.CheckBox YawRateCheckBox;
-        private System.Windows.Forms.CheckBox PitchRateCheckBox;
-        private System.Windows.Forms.CheckBox RollRateCheckBox;
-        private System.Windows.Forms.CheckBox PitchCheckBox;
-        private System.Windows.Forms.CheckBox AllRatesCheckBox;
-        private System.Windows.Forms.CheckBox RollCheckBox;
-        private System.Windows.Forms.CheckBox YawCheckBox;
-        private System.Windows.Forms.CheckBox AhrsCheckBox;
-        private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label9;
@@ -1019,26 +754,15 @@
         public System.Windows.Forms.Button metadata_button;
         private System.Windows.Forms.ComboBox camera_comboBox;
         public System.Windows.Forms.Button camera_button;
-        private System.Windows.Forms.CheckBox accZ_checkBox;
-        private System.Windows.Forms.CheckBox accY_checkBox;
-        private System.Windows.Forms.CheckBox accX_checkBox;
-        private System.Windows.Forms.CheckBox climbrate_checkBox;
-        private System.Windows.Forms.CheckBox altitude_CheckBox;
         private System.Windows.Forms.Button log_button;
         public System.Windows.Forms.Button Parameter_button;
         public System.Windows.Forms.TextBox BatteryVoltageTextBox;
         public System.Windows.Forms.TextBox BatteryGainTextBox;
         public System.Windows.Forms.TextBox BatteryAnalogTextBox;
-        private System.Windows.Forms.Panel panel5;
-        private System.Windows.Forms.PictureBox pictureBox1;
-        public System.Windows.Forms.Button Antenna_Connectbutton;
-        public System.Windows.Forms.Button DownTiltbutton;
-        public System.Windows.Forms.Button RightPanbutton;
-        public System.Windows.Forms.Button UpTiltbutton;
-        public System.Windows.Forms.Button LeftPanbutton;
-        public System.Windows.Forms.ComboBox AntennaComPortcomboBox;
         private System.Windows.Forms.Label millisecondsLabel;
         private System.Windows.Forms.TextBox TimeOffsetTextBox;
         public System.Windows.Forms.Button plotLatLng_button;
+        private Common.FlickerFreePanel flickerFreePanel1;
+        private System.Windows.Forms.Label label12;
     }
 }

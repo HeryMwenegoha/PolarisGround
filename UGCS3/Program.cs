@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using System.Threading;
+using UGCS3.Common;
 namespace UGCS3
 {
     static class Program
@@ -18,7 +20,9 @@ namespace UGCS3
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainView());
+
+            SplashScreen.ShowScreen();
+            //Application.Run(new MainView());
         }
     }
 }

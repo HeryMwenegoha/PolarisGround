@@ -16,7 +16,6 @@ using ZedGraph;
 using UGCS3.Common;
 using System.Windows.Media.Imaging;
 
-//using AForge;
 using AForge;
 using AForge.Video.DirectShow;
 
@@ -25,96 +24,17 @@ namespace UGCS3.UsableControls
 {
     public partial class SettingsControl : UserControl
     {
-        private void AntennaComPortcomboBox_MouseEnter(object sender, EventArgs e)
-        {
-            AntennaComPortcomboBox.Items.Clear();
-            AntennaComPortcomboBox.Items.Add("Select Port");
-            AntennaComPortcomboBox.Items.AddRange(SerialPort.GetPortNames());
-            AntennaComPortcomboBox.SelectedIndex = 0;
-        }
-         
+        public VerticalProgressBar PitchProgressBar;
+        public VerticalProgressBar ThrottleProgressBar;
+        GraphPane pane;
+        LineItem[] Line;
+        FilterInfoCollection video_devices;
+        VideoCaptureDevice final_video;
+        ComboBox zedComboBox;
+        public bool loaded = false;
+        Form camera_form;
+        PictureBox camera_pictureBox;
 
-  
-        private void Antenna_Connectbutton_Click(object sender, EventArgs e)
-        {
-            if (AntennaComPortcomboBox.Text == "" || AntennaComPortcomboBox.Text == ("Select Port"))
-            {
-                MessageBox.Show("Invalid Comport");
-                return;
-            }
-
-            try
-            {
-                if (Antenna_Connectbutton.Text == "Connect")
-                {
-                    if (_serialport.IsOpen)
-                    {
-                        MessageBox.Show("This Comport Cannot be used");
-                        return;
-                    }
-                    _serialport.BaudRate = 38400;
-                    _serialport.PortName = AntennaComPortcomboBox.Text;
-                    _serialport.Open();
-
-                    AntennaComPortcomboBox.Enabled = false;
-                    Antenna_Connectbutton.Text = "Disconnect";
-                }
-                else if (Antenna_Connectbutton.Text == "Disconnect")
-                {
-                    if (_serialport.IsOpen)
-                    {
-                        _serialport.Close();
-                        Antenna_Connectbutton.Text = "Connect";
-                        AntennaComPortcomboBox.Enabled = true;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        /*
-        public void send_gps_raw_int(MAVLink.mavlink_gps_raw_int_t gps_message)
-        {
-            Mavlink_Protocol.sendPacket(gps_message);
-        }
-
- 
-        private void RightPanbutton_Click(object sender, EventArgs e)
-        {
-            MAVLink.mavlink_local_position_ned_t msg_ned = new MAVLink.mavlink_local_position_ned_t();
-            msg_ned.x = 10;
-            Mavlink_Protocol.sendPacket(msg_ned);
-        }
-
-        private void LeftPanbutton_Click(object sender, EventArgs e)
-        {
-            MAVLink.mavlink_local_position_ned_t msg_ned = new MAVLink.mavlink_local_position_ned_t();
-            msg_ned.x = -10;
-            Mavlink_Protocol.sendPacket(msg_ned);
-        }
-
-        private void UpTiltbutton_Click(object sender, EventArgs e)
-        {
-            MAVLink.mavlink_local_position_ned_t msg_ned = new MAVLink.mavlink_local_position_ned_t();
-            msg_ned.y = 10;
-            Mavlink_Protocol.sendPacket(msg_ned);
-        }
-
-        private void DownTiltbutton_Click(object sender, EventArgs e)
-        {
-            MAVLink.mavlink_local_position_ned_t msg_ned = new MAVLink.mavlink_local_position_ned_t();
-            msg_ned.y = -10;
-            Mavlink_Protocol.sendPacket(msg_ned);
-        }
-        */
-
-
-        public SerialPort _serialport;
-        string[] portnames = new string[100];
-        //MavLinkSerialPacketClass Mavlink_Protocol;
         public SettingsControl()
         {
             DoubleBuffered = true;
@@ -128,20 +48,6 @@ namespace UGCS3.UsableControls
 
             Load += SettingsControl_Load;
             Disposed += SettingsControl_Disposed;
-
-            _serialport        = new SerialPort();
-            //Mavlink_Protocol = new MavLinkSerialPacketClass(_serialport);
-
-            portnames   = SerialPort.GetPortNames();
-            AntennaComPortcomboBox.Items.Add("Select Port");
-            AntennaComPortcomboBox.Items.AddRange(portnames);
-            AntennaComPortcomboBox.SelectedIndex = 0;
-            AntennaComPortcomboBox.MouseEnter += AntennaComPortcomboBox_MouseEnter;
-            Antenna_Connectbutton.Click += Antenna_Connectbutton_Click;
-            //RightPanbutton.Click += RightPanbutton_Click;
-            //LeftPanbutton.Click += LeftPanbutton_Click;
-            //UpTiltbutton.Click += UpTiltbutton_Click;
-            //DownTiltbutton.Click += DownTiltbutton_Click;
             
             // Pitch
             PitchProgressBar = new VerticalProgressBar();
@@ -159,81 +65,22 @@ namespace UGCS3.UsableControls
             ThrottleProgressBar.Size = new Size(23, 100);
             ThrottleProgressBar.Location = new System.Drawing.Point(ThrottleYawRadioPanel.Size.Width / 2 - (ThrottleProgressBar.Size.Width / 2), YawProgressBar.Location.Y + YawProgressBar.Size.Height + 10);
 
-            /*
-             * 
-             *  Pitch
-                System.Windows.Forms.Integration.ElementHost ehost = new System.Windows.Forms.Integration.ElementHost();
-                ehost.Size = new System.Drawing.Size(23, 100);
-                ehost.BackColor = Color.Green;
-                ehost.Location = new Point(RollPitchRadioPanel.Size.Width / 2 - (ehost.Size.Width / 2), RollProgressBar.Location.Y + RollProgressBar.Size.Height + 10);
-                ehost.Child = PitchProgressBar;
-            
-                Throttle
-                ThrottleProgressBar = new System.Windows.Controls.ProgressBar();
-                ThrottleProgressBar.Orientation = System.Windows.Controls.Orientation.Vertical;
-                ThrottleProgressBar.Minimum = 750;
-                ThrottleProgressBar.Maximum = 2250;
-                ThrottleProgressBar.Value = 1500;
-                ThrottleProgressBar.LargeChange = 10;       
-                System.Windows.Forms.Integration.ElementHost ehostThrottleProgressBar = new System.Windows.Forms.Integration.ElementHost();
-                ehostThrottleProgressBar.Size = new System.Drawing.Size(23, 100);
-                ehostThrottleProgressBar.BackColor = Color.Green;
-                ehostThrottleProgressBar.Location = new Point(ThrottleYawRadioPanel.Size.Width / 2 - (ehostThrottleProgressBar.Size.Width / 2), YawProgressBar.Location.Y + YawProgressBar.Size.Height + 10);
-                ehostThrottleProgressBar.Child = ThrottleProgressBar;
-             * 
-             * 
-                this.ThrottleYawRadioPanel.Controls.Add(ehostThrottleProgressBar);
-                this.RollPitchRadioPanel.Controls.Add(ehost);
-            */
+            // graph plane
+            pane                        = ZedGraphPane.GraphPane;
+            pane.YAxis.Title.Text       = "Variables";
+            pane.XAxis.Type             = AxisType.Date;
+            pane.XAxis.Title.Text       = "Time (HH:mm:ss)";
+            pane.XAxis.Scale.Format     = "HH:mm:ss";
+            pane.XAxis.Scale.MajorUnit  = DateUnit.Second;
+            pane.XAxis.Scale.MinorUnit  = DateUnit.Millisecond;
+            pane.XAxis.Scale.Min        = DateTime.Now.ToOADate();//.Subtract(new TimeSpan(0, 0, 10, 0, 0)).ToOADate();
+            pane.XAxis.Scale.Max        = DateTime.Now.Add(new TimeSpan(0, 0, 0,0,30)).ToOADate();
+            pane.Legend.FontSpec.Size   = 16;
 
             this.ThrottleYawRadioPanel.Controls.Add(ThrottleProgressBar);
             this.RollPitchRadioPanel.Controls.Add(PitchProgressBar);
-
-            // graph plane
-            pane = ZedGraphPane.GraphPane;
-            pane.Title = "Graph Pane";
-            pane.YAxis.Title = "Variables";
-            pane.YAxis.TitleFontSpec.Size = 16;
-            pane.YAxis.StepAuto = true;
-            pane.XAxis.Title = "Time(s)";
-            pane.XAxis.TitleFontSpec.Size = 16;
-            pane.XAxis.ScaleFontSpec.Size = 16;
-            pane.XAxis.Min = 0;
-            pane.XAxis.Max = 10;
-            pane.XAxis.MinorStep = 0.5;
-            pane.XAxis.Step = 1;
-            pane.Legend.FontSpec.Size = 16;
-            pane.FontSpec.Size = 24;
         }
-        public VerticalProgressBar PitchProgressBar;
-        public VerticalProgressBar ThrottleProgressBar;
-        //public System.Windows.Controls.ProgressBar PitchProgressBar;
-        //public System.Windows.Controls.ProgressBar ThrottleProgressBar;
-        
-        GraphPane pane;
-        LineItem line_RSSI;
-        LineItem line_REMRSSI;
-        LineItem line_NOISE;
-        LineItem line_REMNOISE;
-        LineItem line_ROLL;
-        LineItem line_hilROLL;
-        LineItem line_PITCH;
-        LineItem line_hilPITCH;
-        LineItem line_YAW;
-        LineItem line_hilYAW;
-        LineItem line_ROLLSPEED;
-        LineItem line_PITCHSPEED;
-        LineItem line_YAWSPEED;
 
-        LineItem line_ALTM;
-        LineItem line_CLIMBRATE;
-        LineItem line_ACCELX;
-        LineItem line_ACCELY;
-        LineItem line_ACCELZ;
-
-
-        FilterInfoCollection video_devices;
-        VideoCaptureDevice final_video;
         private void SettingsControl_Load(object sender, EventArgs e)
         {
             this.Resize   += SettingsControl_Resize;
@@ -241,23 +88,38 @@ namespace UGCS3.UsableControls
             this.MainPanel.BackColor = Color.Transparent;
             this.MainPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 
-            RollRateCheckBox.CheckedChanged +=  RollRateCheckBox_CheckedChanged;
-            PitchRateCheckBox.CheckedChanged += PitchRateCheckBox_CheckedChanged;
-            YawRateCheckBox.CheckedChanged += YawRateCheckBox_CheckedChanged;
-            AllRatesCheckBox.CheckedChanged += AllRatesCheckBox_CheckedChanged;
+            object[] zeditems = new object[]
+            {
+                "Euler(rad)",
+                "Roll(rad)",
+                "Pitch(rad)",
+                "Yaw(rad)",
+                "EulerRates(rad/sec)",
+                "RollRate(rad/sec)",
+                "PitchRate(rad/sec)",
+                "YawRate(rad/sec)",
+                "Altitude(m)",
+                "Climbrate(cm/s)",
+                "Speed(m/s)",
+                "Airspeed(m/s)",
+                "Groundspeed(m/s)",
+                "Accel(m/s/s)",
+                "Xacc(m/s/s)",
+                "Yacc(m/s/s)",
+                "Zacc(m/s/s)",
+            };
 
-            RollCheckBox.CheckedChanged += RollCheckBox_CheckedChanged;
-            PitchCheckBox.CheckedChanged += PitchCheckBox_CheckedChanged;
-            YawCheckBox.CheckedChanged += YawCheckBox_CheckedChanged;
-            AhrsCheckBox.CheckedChanged += AhrsCheckBox_CheckedChanged;
-
-            altitude_CheckBox.CheckedChanged  += altcheck_Box_CheckedChanged;
-            climbrate_checkBox.CheckedChanged += climbrate_checkBox_CheckedChanged;
-            accX_checkBox.CheckedChanged      += accX_checkBox_CheckedChanged;
-            accY_checkBox.CheckedChanged      += accY_checkBox_CheckedChanged;
-            accZ_checkBox.CheckedChanged      += accZ_checkBox_CheckedChanged;
-
+            zedComboBox = new ComboBox();
+            ZedGraphPane.Controls.Add(zedComboBox);
             ZedGraphPane.MouseWheel += ZedGraphPane_MouseWheel;
+            zedComboBox.Items.AddRange(zeditems);
+            zedComboBox.SelectedIndex = 0;
+            zedComboBox.SelectedIndexChanged += ZedComboBox_SelectedIndexChanged;
+            ZedGraphPane.GraphPane.Title.Text = zedComboBox.Items[0].ToString();
+            Line    = new LineItem[3];
+            Line[0] = pane.AddCurve("Variable1", new PointPairList(), Color.Red, SymbolType.None);
+            Line[1] = pane.AddCurve("Variable2", new PointPairList(), Color.Blue, SymbolType.None);
+            Line[2] = pane.AddCurve("Variable3", new PointPairList(), Color.Green, SymbolType.None);
 
             INS_Calibrate_Button.MouseClick += INS_Calibrate_Button_MouseClick;
             RadioCalibrateButton.MouseClick += RadioCalibrateButton_MouseClick;
@@ -269,24 +131,74 @@ namespace UGCS3.UsableControls
 
             video_devices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
             final_video = new VideoCaptureDevice();
+
+            loaded = true;
+        }
+
+        private void ZedComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // combobox item
+            ComboBox cmb = sender as ComboBox;
+
+            // setup lines
+            switch (cmb.Items[cmb.SelectedIndex].ToString())
+            {
+                case "Euler(rad)":
+                case "EulerRates(rad/sec)":
+                case "Accel(m/s/s)":
+                    Line[0].Label.Text = "X";
+                    Line[1].Label.Text = "Y";
+                    Line[2].Label.Text = "Z";
+                    break;
+
+                case "Speed(m/s)":
+                    Line[0].Label.Text = "Air";
+                    Line[1].Label.Text = "Ground";
+                    break;
+
+                default:
+                    Line[0].Label.Text = cmb.Items[cmb.SelectedIndex].ToString();
+                    break;
+            }
+
+            // xetup axis
+            switch(cmb.Items[cmb.SelectedIndex].ToString())
+            {
+                case "Euler(rad)":
+                case "EulerRates(rad/sec)":
+                case "RollRate(rad/sec)":
+                case "PitchRate(rad/sec)":
+                case "YawRate(rad/sec)":
+                case "Roll(rad)":
+                case "Pitch(rad)":
+                case "Yaw(rad)":
+                     pane.YAxis.Scale.Max = 3.14192;
+                     pane.YAxis.Scale.Min = -3.14192;      
+                    break;
+
+                default:
+                    pane.YAxis.Scale.MaxAuto = true;
+                    pane.YAxis.Scale.MinAuto = true;
+                    break;
+            }
+
+            // house keeping       
+            ZedGraphPane.GraphPane.Title.Text = cmb.Items[cmb.SelectedIndex].ToString();
+            ZedGraphPane.Invalidate();
         }
 
         private void camera_comboBox_MouseEnter(object sender, EventArgs e)
         {
-            video_devices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-        
+            video_devices = new FilterInfoCollection(FilterCategory.VideoInputDevice);       
             camera_comboBox.Items.Clear();
-
             foreach (FilterInfo vf in video_devices)
             {
                 camera_comboBox.Items.Add(vf.Name);
             }
-
             camera_comboBox.SelectedIndex = 0;
         }
 
-        Form camera_form;
-        PictureBox camera_pictureBox;
+
         private void camera_button_Click(object sender, EventArgs e)
         {
             if (camera_button.Text == "Camera On")
@@ -974,530 +886,113 @@ namespace UGCS3.UsableControls
             int mousemove = e.Delta / 120;
             if (mousemove > 0)
             {
-                if (pane.YAxis.Max > 0.5)
-                    pane.YAxis.Max -= 1;
-                if (pane.YAxis.Min < -0.5)
-                    pane.YAxis.Min += 1;
+         
+                if (pane.YAxis.Scale.Max > 0.5)
+                    pane.YAxis.Scale.Max -= 1;
+                if (pane.YAxis.Scale.Min < -0.5)
+                   pane.YAxis.Scale.Min += 1;
             }
             else
             {
-                pane.YAxis.Max += 1;
-                pane.YAxis.Min -= 1;
+                pane.YAxis.Scale.Max += 1;
+                pane.YAxis.Scale.Min -= 1;
             }
-        }
-
-        Int64 x = -1;
-        Int64 y = -1;
-
-
-        private void AllRatesCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            RollRateCheckBox.Checked = PitchRateCheckBox.Checked = YawRateCheckBox.Checked = AllRatesCheckBox.Checked;
-        }
-
-        private void AhrsCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            RollCheckBox.Checked = PitchCheckBox.Checked = YawCheckBox.Checked = AhrsCheckBox.Checked;
-        }
-
-        private void altcheck_Box_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!altitude_CheckBox.Checked)
-            {
-                line_ALTM.Clear();
-                pane.CurveList.Remove(line_ALTM);
-            }
-            else
-            {
-                //ControlCollection cntrl_collection = new ControlCollection();
-                foreach (Control cntrl in GraphGroupBox.Controls)
-                {
-                    if (cntrl.GetType() == typeof(CheckBox))
-                    {
-                        if ((cntrl  as CheckBox)!= (sender as CheckBox))
-                            (cntrl as CheckBox).Checked = false;
-                    }
-                }
-                //pane.CurveList.Clear();
-                line_ALTM = pane.AddCurve("Altitude (m)", new PointPairList(), Color.Green, SymbolType.None);  
-            }
-        }
-
-        private void climbrate_checkBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!climbrate_checkBox.Checked)
-            {
-                line_CLIMBRATE.Clear();
-                pane.CurveList.Remove(line_CLIMBRATE);
-            }
-            else
-            {
-                foreach (Control cntrl in GraphGroupBox.Controls)
-                {
-                    if (cntrl.GetType() == typeof(CheckBox))
-                    {
-                        if ((cntrl as CheckBox) != (sender as CheckBox))
-                            (cntrl as CheckBox).Checked = false;
-                    }
-                }
-                //pane.CurveList.Clear();
-                line_CLIMBRATE = pane.AddCurve("ClimbRate (cm/s)", new PointPairList(), Color.Red, SymbolType.None);
-            }
-        }
-
-        private void accX_checkBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!accX_checkBox.Checked)
-            {
-                line_ACCELX.Clear();
-                pane.CurveList.Remove(line_ACCELX);
-            }
-            else
-            {
-                if (accY_checkBox.Checked || accZ_checkBox.Checked)
-                {
-                    // Just add without clearing
-                    line_ACCELX = pane.AddCurve("ACCELX (m/s2)", new PointPairList(), Color.Black, SymbolType.None);
-                }
-                else
-                {
-                    // clear fist
-                    // pane.CurveList.Clear();
-                    line_ACCELX = pane.AddCurve("ACCELX (m/s2)", new PointPairList(), Color.Black, SymbolType.None);
-                }
-
-                foreach (Control cntrl in GraphGroupBox.Controls)
-                {
-                    if (cntrl.GetType() == typeof(CheckBox))
-                    {
-                        if ((cntrl as CheckBox) != (sender as CheckBox))
-                            (cntrl as CheckBox).Checked = false;
-                    }
-                }
-            }
-        }
-
-        private void accY_checkBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!accY_checkBox.Checked)
-            {
-                line_ACCELY.Clear();
-                pane.CurveList.Remove(line_ACCELY);
-            }
-            else
-            {
-                if (accX_checkBox.Checked || accZ_checkBox.Checked)
-                {
-                    // Just add without clearing
-                    line_ACCELY = pane.AddCurve("ACCELY (m/s2)", new PointPairList(), Color.Blue, SymbolType.None);
-                }
-                else
-                {
-                    // clear fist
-                    //pane.CurveList.Clear();
-                    line_ACCELY = pane.AddCurve("ACCELY (m/s2)", new PointPairList(), Color.Blue, SymbolType.None);
-                }
-
-                foreach (Control cntrl in GraphGroupBox.Controls)
-                {
-                    if (cntrl.GetType() == typeof(CheckBox))
-                    {
-                        if ((cntrl as CheckBox) != (sender as CheckBox))
-                            (cntrl as CheckBox).Checked = false;
-                    }
-                }
-            }
-        }
-
-        private void accZ_checkBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!accZ_checkBox.Checked)
-            {
-                line_ACCELZ.Clear();
-                pane.CurveList.Remove(line_ACCELZ);
-            }
-            else
-            {
-                if (accX_checkBox.Checked || accY_checkBox.Checked)
-                {
-                    // Just add without clearing
-                    line_ACCELZ = pane.AddCurve("ACCELZ (m/s2)", new PointPairList(), Color.Brown, SymbolType.None);
-                }
-                else
-                {
-                    // clear fist
-                    //pane.CurveList.Clear();
-                    line_ACCELZ = pane.AddCurve("ACCELZ (m/s2)", new PointPairList(), Color.Brown, SymbolType.None);
-                }
-
-                foreach (Control cntrl in GraphGroupBox.Controls)
-                {
-                    if (cntrl.GetType() == typeof(CheckBox))
-                    {
-                        if ((cntrl as CheckBox) != (sender as CheckBox))
-                            (cntrl as CheckBox).Checked = false;
-                    }
-                }
-            }
-        }  
-
-        private void RollCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!RollCheckBox.Checked)
-            {
-                line_ROLL.Clear();
-                line_hilROLL.Clear();
-
-                pane.CurveList.Remove(line_ROLL);
-                pane.CurveList.Remove(line_hilROLL);
-                return;
-            }
-
-            if (PitchCheckBox.Checked || YawCheckBox.Checked)
-            {
-                line_ROLL = pane.AddCurve("ROLL", new PointPairList(), Color.Red, SymbolType.None);
-                line_hilROLL = pane.AddCurve("hil ROLL", new PointPairList(), Color.Green, SymbolType.None);
-            }
-            else
-            {
-                //pane.CurveList.Clear();
-                line_ROLL    = pane.AddCurve("ROLL", new PointPairList(), Color.Red, SymbolType.None);
-                line_hilROLL = pane.AddCurve("hil ROLL", new PointPairList(), Color.Green, SymbolType.None);
-            }
-
-            foreach (Control cntrl in GraphGroupBox.Controls)
-            {
-                if (cntrl.GetType() == typeof(CheckBox))
-                {
-                    if ((cntrl as CheckBox) != (sender as CheckBox))
-                        (cntrl as CheckBox).Checked = false;
-                }
-            }
-
-            x = 0;
-            pane.XAxis.Min = 0;
-            pane.XAxis.Max = 10;
-
-            pane.YAxis.MaxAuto = false;
-            pane.YAxis.MinAuto = false;
-            pane.YAxis.Max = 3.14192;
-            pane.YAxis.Min = -3.14192;
-        }
-
-
-        private void PitchCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!PitchCheckBox.Checked)
-            {
-                line_PITCH.Clear();
-                pane.CurveList.Remove(line_PITCH);
-
-                line_hilPITCH.Clear();
-                pane.CurveList.Remove(line_hilPITCH);
-                return;
-            }
-            if (RollCheckBox.Checked || YawCheckBox.Checked)
-            {
-                line_PITCH = pane.AddCurve("PITCH", new PointPairList(), Color.Brown, SymbolType.None);
-                line_hilPITCH = pane.AddCurve("hil PITCH", new PointPairList(), Color.Orange, SymbolType.None);
-            }
-            else
-            {
-                //pane.CurveList.Clear();
-                line_PITCH = pane.AddCurve("PITCH", new PointPairList(), Color.Brown, SymbolType.None);
-                line_hilPITCH = pane.AddCurve("hil PITCH", new PointPairList(), Color.Orange, SymbolType.None);
-            }
-
-            foreach (Control cntrl in GraphGroupBox.Controls)
-            {
-                if (cntrl.GetType() == typeof(CheckBox))
-                {
-                    if ((cntrl as CheckBox) != (sender as CheckBox))
-                        (cntrl as CheckBox).Checked = false;
-                }
-            }
-
-            x = 0;
-            pane.XAxis.Min = 0;
-            pane.XAxis.Max = 10;
-
-            pane.YAxis.MaxAuto = false;
-            pane.YAxis.MinAuto = false;
-            pane.YAxis.Max = 3.14192;
-            pane.YAxis.Min = -3.14192;
-        }
-
-
-        private void YawCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!YawCheckBox.Checked)
-            {
-                line_YAW.Clear();
-                pane.CurveList.Remove(line_YAW);
-                                line_hilYAW.Clear();
-                pane.CurveList.Remove(line_hilYAW);
-                return;
-            }
-
-            if (RollCheckBox.Checked || PitchCheckBox.Checked)
-            {
-                line_YAW = pane.AddCurve("YAW", new PointPairList(), Color.Yellow, SymbolType.None);
-                 line_hilYAW = pane.AddCurve("hil YAW", new PointPairList(), Color.Black, SymbolType.None);
-            }
-            else
-            {
-                //pane.CurveList.Clear();
-                line_YAW = pane.AddCurve("YAW", new PointPairList(), Color.Yellow, SymbolType.None);
-                line_hilYAW = pane.AddCurve("hil YAW", new PointPairList(), Color.Black, SymbolType.None);
-            }
-
-            foreach (Control cntrl in GraphGroupBox.Controls)
-            {
-                if (cntrl.GetType() == typeof(CheckBox))
-                {
-                    if ((cntrl as CheckBox) != (sender as CheckBox))
-                        (cntrl as CheckBox).Checked = false;
-                }
-            }
-
-            x = 0;
-            pane.XAxis.Min = 0;
-            pane.XAxis.Max = 10;
-
-            pane.YAxis.MaxAuto = false;
-            pane.YAxis.MinAuto = false;
-            pane.YAxis.Max = 3.14192;
-            pane.YAxis.Min = -3.14192;
-        }
-
-
-        private void RollRateCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if(!RollRateCheckBox.Checked)
-            {
-                line_ROLLSPEED.Clear();
-                pane.CurveList.Remove(line_ROLLSPEED);
-                return;
-            }
-
-            if(PitchRateCheckBox.Checked || YawRateCheckBox.Checked)
-            {
-                line_ROLLSPEED = pane.AddCurve("ROLL RATE", new PointPairList(), Color.Green, SymbolType.None);         
-            }
-            else
-            {
-                //pane.CurveList.Clear();
-                line_ROLLSPEED = pane.AddCurve("ROLL RATE", new PointPairList(), Color.Green, SymbolType.None);         
-            }
-
-            foreach (Control cntrl in GraphGroupBox.Controls)
-            {
-                if (cntrl.GetType() == typeof(CheckBox))
-                {
-                    if ((cntrl as CheckBox) != (sender as CheckBox))
-                        (cntrl as CheckBox).Checked = false;
-                }
-            }
-
-            x = 0;
-            pane.XAxis.Min = 0;
-            pane.XAxis.Max = 10;
-
-            pane.YAxis.MaxAuto = false;
-            pane.YAxis.MinAuto = false;
-            pane.YAxis.Max = 6.29;
-            pane.YAxis.Min = -6.29;
-        }
-
-        private void PitchRateCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if(!PitchRateCheckBox.Checked)
-            {
-                line_PITCHSPEED.Clear();
-                pane.CurveList.Remove(line_PITCHSPEED);
-                return;
-            }
-            if (RollRateCheckBox.Checked || YawRateCheckBox.Checked)
-            {
-                line_PITCHSPEED = pane.AddCurve("PITCH RATE", new PointPairList(), Color.Blue, SymbolType.None);
-            }
-            else
-            {
-                //pane.CurveList.Clear();
-                line_PITCHSPEED = pane.AddCurve("PITCH RATE", new PointPairList(), Color.Blue, SymbolType.None);
-            }
-
-            foreach (Control cntrl in GraphGroupBox.Controls)
-            {
-                if (cntrl.GetType() == typeof(CheckBox))
-                {
-                    if ((cntrl as CheckBox) != (sender as CheckBox))
-                        (cntrl as CheckBox).Checked = false;
-                }
-            }
-
-            x = 0;
-            pane.XAxis.Min = 0;
-            pane.XAxis.Max = 10;
-
-            pane.YAxis.MaxAuto = false;
-            pane.YAxis.MinAuto = false;
-            pane.YAxis.Max = 6.29;
-            pane.YAxis.Min = -6.29;
-
-        }
-
-        private void YawRateCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if(!YawRateCheckBox.Checked)
-            {
-                line_YAWSPEED.Clear();
-                pane.CurveList.Remove(line_YAWSPEED);
-                return;
-            }
-
-            if (RollRateCheckBox.Checked || PitchRateCheckBox.Checked)
-            {
-                line_YAWSPEED = pane.AddCurve("YAW RATE", new PointPairList(), Color.Black, SymbolType.None);
-            }
-            else
-            {
-                //pane.CurveList.Clear();
-                line_YAWSPEED = pane.AddCurve("YAW RATE", new PointPairList(), Color.Black, SymbolType.None);
-            }
-
-            foreach (Control cntrl in GraphGroupBox.Controls)
-            {
-                if (cntrl.GetType() == typeof(CheckBox))
-                {
-                    if ((cntrl as CheckBox) != (sender as CheckBox))
-                        (cntrl as CheckBox).Checked = false;
-                }
-            }
-
-            x = 0;
-            pane.XAxis.Min = 0;
-            pane.XAxis.Max = 10;
-
-            pane.YAxis.MaxAuto = false;
-            pane.YAxis.MinAuto = false;
-            pane.YAxis.Max = 6.29;
-            pane.YAxis.Min = -6.29;
         }
 
 
         public void GraphPane_Draw(float[] values)
         {
-            x++;
-            y++;
+            double time  = DateTime.Now.ToOADate();
 
-            double time = (double)(x / 20.0);
-            if (time > pane.XAxis.Max)
+            if (time > pane.XAxis.Scale.Max)
             {
-                pane.XAxis.Max = time + pane.XAxis.Step;
-                pane.XAxis.Min = pane.XAxis.Max - 10;
+                pane.XAxis.Scale.Max = DateTime.Now.Add(new TimeSpan(0, 0, 0, 0, 30)).ToOADate();
+                pane.XAxis.Scale.Min = DateTime.Now.Subtract(new TimeSpan(0, 0, 0, 0, 9970)).ToOADate();
             }
 
-            // AHRS ROLLRAD
-            if (RollCheckBox.Checked)
+            for (int i = 0; i < 3; i++)
             {
-                if (line_ROLL.Points.Count > 210)
-                    line_ROLL.Points.Remove(0);
-                line_ROLL.AddPoint(time, values[3]);
-
-                if (line_hilROLL.Points.Count > 210)
-                    line_hilROLL.Points.Remove(0);
-                line_hilROLL.AddPoint(time, values[6]);
+                if (Line[i].Points.Count > 1500)
+                    Line[i].RemovePoint(0);
             }
 
-            // AHRS PITCHRAD
-            if(PitchCheckBox.Checked)
+
+            switch (zedComboBox.Items[zedComboBox.SelectedIndex].ToString())
             {
-                if (line_PITCH.Points.Count > 210)
-                    line_PITCH.Points.Remove(0);
-                line_PITCH.AddPoint(time, values[4]);
+                case "EulerRates(rad/sec)":
+                    Line[0].AddPoint(time, values[0]);
+                    Line[1].AddPoint(time, values[1]);
+                    Line[2].AddPoint(time, values[2]);
+                    break;
 
-                if (line_hilPITCH.Points.Count > 210)
-                    line_hilPITCH.Points.Remove(0);
-                line_hilPITCH.AddPoint(time, values[7]);
-            }
+                case "Euler(rad)":
+                    Line[0].AddPoint(time, values[3]);
+                    Line[1].AddPoint(time, values[4]);
+                    Line[2].AddPoint(time, values[5]);
+                    break;
 
-            // AHRS YAWRAD
-            if(YawCheckBox.Checked)
-            {
-                if (line_YAW.Points.Count > 210)
-                    line_YAW.Points.Remove(0);
-                line_YAW.AddPoint(time, values[5]);
+                case "RollRate(rad/sec)":
+                    Line[0].AddPoint(time, values[0]);
+                    break;
 
-                if (line_hilYAW.Points.Count > 210)
-                    line_hilYAW.Points.Remove(0);
-                line_hilYAW.AddPoint(time, values[8]);
-            }
-            
+                case "PitchRate(rad/sec)":
+                    Line[0].AddPoint(time, values[1]);
+                    break;
 
+                case "YawRate(rad/sec)":
+                    Line[0].AddPoint(time, values[2]);
+                    break;
 
-            // AHRS ROLLRATE RPS
-            if (RollRateCheckBox.Checked)
-            {
-                if (line_ROLLSPEED.Points.Count > 210)
-                    line_ROLLSPEED.Points.Remove(0);
-                line_ROLLSPEED.AddPoint(time, values[0]);
-            }
+                case "Roll(rad)":
+                    Line[0].AddPoint(time, values[3]);
+                    break;
 
-            // AHRS PITCHRATE RPS
-            if (PitchRateCheckBox.Checked)
-            {
-                if (line_PITCHSPEED.Points.Count > 210)
-                    line_PITCHSPEED.Points.Remove(0);
-                line_PITCHSPEED.AddPoint(time, values[1]);
-            }
+                case "Pitch(rad)":
+                    Line[0].AddPoint(time, values[4]);
+                    break;
 
-            // AHRS YAWRATE RPS
-            if (YawRateCheckBox.Checked)
-            {
-                if (line_YAWSPEED.Points.Count > 210)
-                    line_YAWSPEED.Points.Remove(0);
-                line_YAWSPEED.AddPoint(time, values[2]);
-            }          
+                case "Yaw(rad)":
+                    Line[0].AddPoint(time, values[5]);
+                    break;
 
-            // AHRS ALTITUDE
-            if (altitude_CheckBox.Checked)
-            {
-                if (line_ALTM.Points.Count > 210)
-                    line_ALTM.Points.Remove(0);
-                line_ALTM.AddPoint(time, values[9]);
-            }
+                case "Accel(m/s/s)":
+                    Line[0].AddPoint(time, values[11]);
+                    Line[1].AddPoint(time, values[12]);
+                    Line[2].AddPoint(time, values[13]);
+                    break;
 
-            // AHRS CLIMBRATE
-            if (climbrate_checkBox.Checked)
-            {
-                if (line_CLIMBRATE.Points.Count > 210)
-                    line_CLIMBRATE.Points.Remove(0);
-                line_CLIMBRATE.AddPoint(time, values[10]);
-            }
+                case "Xacc(m/s/s)":
+                    Line[0].AddPoint(time, values[11]);
+                    break;
 
-            // AHRS XACCELERATION
-            if (accX_checkBox.Checked)
-            {
-                if (line_ACCELX.Points.Count > 210)
-                    line_ACCELX.Points.Remove(0);
-                line_ACCELX.AddPoint(time, values[11]);
-            }
+                case "Yacc(m/s/s)":
+                    Line[0].AddPoint(time, values[12]);
+                    break;
 
-            // AHRS YACCELERATION
-            if (accY_checkBox.Checked)
-            {
-                if (line_ACCELY.Points.Count > 210)
-                    line_ACCELY.Points.Remove(0);
-                line_ACCELY.AddPoint(time, values[12]);
-            }
+                case "Zacc(m/s/s)":
+                    Line[0].AddPoint(time, values[13]);
+                    break;
 
-            // AHRS ZACCELERATION
-            if (accZ_checkBox.Checked)
-            {
-                if (line_ACCELZ.Points.Count > 210)
-                    line_ACCELZ.Points.Remove(0);
-                line_ACCELZ.AddPoint(time, values[13]);
+                case "Altitude(m)":
+                    Line[0].AddPoint(time, values[9]);
+                    break;
+
+                case "Climbrate(cm/s)":
+                    Line[0].AddPoint(time, values[10]);
+                    break;
+
+                case "Speed(m/s)":
+                    Line[0].AddPoint(time, values[6]);
+                    Line[1].AddPoint(time, values[7]);
+                    break;
+
+                case "Airspeed(m/s)":
+                    Line[0].AddPoint(time, values[6]);
+                    break;
+
+                case "Groundspeed(m/s)":
+                    Line[0].AddPoint(time, values[7]);
+                    break;
             }
 
             // invalidate GraphPane
@@ -1551,96 +1046,6 @@ namespace UGCS3.UsableControls
                     camera_pictureBox = null;
                     camera_form       = null;
                 }
-            }
-            // check boxex
-            RollRateCheckBox.Dispose();
-            PitchRateCheckBox.Dispose();
-            YawRateCheckBox.Dispose();
-
-
-            if(line_ROLL != null)
-            {
-                line_ROLL.Clear();
-                line_ROLL = null;
-            }
-
-            if (line_hilROLL != null)
-            {
-                line_hilROLL.Clear();
-                line_hilROLL = null;
-            }
-
-            if (line_PITCH != null)
-            {
-                line_PITCH.Clear();
-                line_PITCH = null;
-            }
-
-            if (line_hilPITCH != null)
-            {
-                line_hilPITCH.Clear();
-                line_hilPITCH = null;
-            }
-
-
-            if(line_YAW != null)
-            {
-                line_YAW.Clear();
-                line_YAW = null;
-            }
-
-            if (line_hilYAW != null)
-            {
-                line_hilYAW.Clear();
-                line_hilYAW = null;
-            }
-
-            if (line_ROLLSPEED != null)
-            {
-                line_ROLLSPEED.Clear();
-                line_ROLLSPEED = null;
-            }
-
-            if (line_YAWSPEED != null)
-            {
-                line_YAWSPEED.Clear();
-                line_YAWSPEED = null;
-            }
-
-            if (line_PITCHSPEED != null)
-            {
-                line_PITCHSPEED.Clear();
-                line_PITCHSPEED = null;
-            }
-
-            if (line_ALTM != null)
-            {
-                line_ALTM.Clear();
-                line_ALTM = null;
-            }
-
-            if (line_CLIMBRATE != null)
-            {
-                line_CLIMBRATE.Clear();
-                line_CLIMBRATE = null;
-            }
-
-            if (line_ACCELX != null)
-            {
-                line_ACCELX.Clear();
-                line_ACCELX = null;
-            }
-
-            if (line_ACCELY != null)
-            {
-                line_ACCELY.Clear();
-                line_ACCELY = null;
-            }
-
-            if (line_ACCELZ != null)
-            {
-                line_ACCELZ.Clear();
-                line_ACCELZ = null;
             }
 
             ZedGraphPane.Dispose();

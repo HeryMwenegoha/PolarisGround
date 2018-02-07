@@ -38,13 +38,13 @@
             this.Flight_Plan_Button = new System.Windows.Forms.Button();
             this.StatusPanel = new UGCS3.Common.FlickerFreePanel();
             this.RadiusNumericUpDown = new System.Windows.Forms.NumericUpDown();
-            this.Do_Action_Button = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.WPSeq_ComboBox = new System.Windows.Forms.ComboBox();
             this.StatusLabel = new System.Windows.Forms.Label();
+            this.Do_Action_Button = new System.Windows.Forms.Button();
             this.WriteWayPointsButton = new System.Windows.Forms.Button();
-            this.ComportStatuslabel = new System.Windows.Forms.Label();
             this.ReadWayPointsButton = new System.Windows.Forms.Button();
+            this.WPSeq_ComboBox = new System.Windows.Forms.ComboBox();
+            this.ComportStatuslabel = new System.Windows.Forms.Label();
             this.StatusPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.RadiusNumericUpDown)).BeginInit();
             this.SuspendLayout();
@@ -148,16 +148,16 @@
             // StatusPanel
             // 
             this.StatusPanel.Controls.Add(this.RadiusNumericUpDown);
-            this.StatusPanel.Controls.Add(this.Do_Action_Button);
             this.StatusPanel.Controls.Add(this.label1);
-            this.StatusPanel.Controls.Add(this.WPSeq_ComboBox);
             this.StatusPanel.Controls.Add(this.StatusLabel);
+            this.StatusPanel.Controls.Add(this.Do_Action_Button);
             this.StatusPanel.Controls.Add(this.WriteWayPointsButton);
-            this.StatusPanel.Controls.Add(this.ComportStatuslabel);
             this.StatusPanel.Controls.Add(this.ReadWayPointsButton);
-            this.StatusPanel.Location = new System.Drawing.Point(458, 2);
+            this.StatusPanel.Controls.Add(this.WPSeq_ComboBox);
+            this.StatusPanel.Controls.Add(this.ComportStatuslabel);
+            this.StatusPanel.Location = new System.Drawing.Point(457, 3);
             this.StatusPanel.Name = "StatusPanel";
-            this.StatusPanel.Size = new System.Drawing.Size(305, 80);
+            this.StatusPanel.Size = new System.Drawing.Size(306, 80);
             this.StatusPanel.TabIndex = 5;
             // 
             // RadiusNumericUpDown
@@ -169,7 +169,7 @@
             0,
             0,
             0});
-            this.RadiusNumericUpDown.Location = new System.Drawing.Point(90, 5);
+            this.RadiusNumericUpDown.Location = new System.Drawing.Point(91, 2);
             this.RadiusNumericUpDown.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.RadiusNumericUpDown.Maximum = new decimal(new int[] {
             255,
@@ -191,11 +191,37 @@
             0,
             0});
             // 
+            // label1
+            // 
+            this.label1.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label1.ForeColor = System.Drawing.SystemColors.ActiveCaption;
+            this.label1.Location = new System.Drawing.Point(6, 2);
+            this.label1.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(81, 22);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Radius (m)";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // StatusLabel
+            // 
+            this.StatusLabel.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.StatusLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.StatusLabel.ForeColor = System.Drawing.SystemColors.ActiveCaption;
+            this.StatusLabel.Location = new System.Drawing.Point(6, 25);
+            this.StatusLabel.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.StatusLabel.Name = "StatusLabel";
+            this.StatusLabel.Size = new System.Drawing.Size(176, 21);
+            this.StatusLabel.TabIndex = 0;
+            this.StatusLabel.Text = "Status";
+            this.StatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // Do_Action_Button
             // 
             this.Do_Action_Button.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.Do_Action_Button.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.Do_Action_Button.Location = new System.Drawing.Point(202, 51);
+            this.Do_Action_Button.Location = new System.Drawing.Point(203, 51);
             this.Do_Action_Button.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.Do_Action_Button.Name = "Do_Action_Button";
             this.Do_Action_Button.Size = new System.Drawing.Size(100, 25);
@@ -203,49 +229,11 @@
             this.Do_Action_Button.Text = "Do Action";
             this.Do_Action_Button.UseVisualStyleBackColor = true;
             // 
-            // label1
-            // 
-            this.label1.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label1.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.label1.Location = new System.Drawing.Point(4, 3);
-            this.label1.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(179, 25);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Radius (m)";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // WPSeq_ComboBox
-            // 
-            this.WPSeq_ComboBox.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.WPSeq_ComboBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.WPSeq_ComboBox.FormattingEnabled = true;
-            this.WPSeq_ComboBox.Location = new System.Drawing.Point(202, 4);
-            this.WPSeq_ComboBox.Margin = new System.Windows.Forms.Padding(4);
-            this.WPSeq_ComboBox.Name = "WPSeq_ComboBox";
-            this.WPSeq_ComboBox.Size = new System.Drawing.Size(100, 24);
-            this.WPSeq_ComboBox.TabIndex = 3;
-            this.WPSeq_ComboBox.Text = "Command";
-            // 
-            // StatusLabel
-            // 
-            this.StatusLabel.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.StatusLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.StatusLabel.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.StatusLabel.Location = new System.Drawing.Point(4, 30);
-            this.StatusLabel.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-            this.StatusLabel.Name = "StatusLabel";
-            this.StatusLabel.Size = new System.Drawing.Size(179, 20);
-            this.StatusLabel.TabIndex = 0;
-            this.StatusLabel.Text = "Status";
-            this.StatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
             // WriteWayPointsButton
             // 
             this.WriteWayPointsButton.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.WriteWayPointsButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.WriteWayPointsButton.Location = new System.Drawing.Point(93, 51);
+            this.WriteWayPointsButton.Location = new System.Drawing.Point(91, 51);
             this.WriteWayPointsButton.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.WriteWayPointsButton.Name = "WriteWayPointsButton";
             this.WriteWayPointsButton.Size = new System.Drawing.Size(91, 26);
@@ -253,24 +241,11 @@
             this.WriteWayPointsButton.Text = "WriteWP";
             this.WriteWayPointsButton.UseVisualStyleBackColor = true;
             // 
-            // ComportStatuslabel
-            // 
-            this.ComportStatuslabel.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.ComportStatuslabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.ComportStatuslabel.ForeColor = System.Drawing.SystemColors.ActiveCaption;
-            this.ComportStatuslabel.Location = new System.Drawing.Point(202, 30);
-            this.ComportStatuslabel.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-            this.ComportStatuslabel.Name = "ComportStatuslabel";
-            this.ComportStatuslabel.Size = new System.Drawing.Size(100, 20);
-            this.ComportStatuslabel.TabIndex = 0;
-            this.ComportStatuslabel.Text = "Port Status";
-            this.ComportStatuslabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
             // ReadWayPointsButton
             // 
             this.ReadWayPointsButton.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.ReadWayPointsButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ReadWayPointsButton.Location = new System.Drawing.Point(3, 52);
+            this.ReadWayPointsButton.Location = new System.Drawing.Point(6, 51);
             this.ReadWayPointsButton.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.ReadWayPointsButton.Name = "ReadWayPointsButton";
             this.ReadWayPointsButton.Size = new System.Drawing.Size(81, 26);
@@ -278,10 +253,36 @@
             this.ReadWayPointsButton.Text = "ReadWp";
             this.ReadWayPointsButton.UseVisualStyleBackColor = true;
             // 
+            // WPSeq_ComboBox
+            // 
+            this.WPSeq_ComboBox.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.WPSeq_ComboBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.WPSeq_ComboBox.FormattingEnabled = true;
+            this.WPSeq_ComboBox.Location = new System.Drawing.Point(203, 2);
+            this.WPSeq_ComboBox.Margin = new System.Windows.Forms.Padding(4);
+            this.WPSeq_ComboBox.Name = "WPSeq_ComboBox";
+            this.WPSeq_ComboBox.Size = new System.Drawing.Size(100, 24);
+            this.WPSeq_ComboBox.TabIndex = 3;
+            this.WPSeq_ComboBox.Text = "Command";
+            // 
+            // ComportStatuslabel
+            // 
+            this.ComportStatuslabel.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.ComportStatuslabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.ComportStatuslabel.ForeColor = System.Drawing.SystemColors.ActiveCaption;
+            this.ComportStatuslabel.Location = new System.Drawing.Point(203, 28);
+            this.ComportStatuslabel.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.ComportStatuslabel.Name = "ComportStatuslabel";
+            this.ComportStatuslabel.Size = new System.Drawing.Size(100, 20);
+            this.ComportStatuslabel.TabIndex = 0;
+            this.ComportStatuslabel.Text = "Port Status";
+            this.ComportStatuslabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // MainView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(982, 953);
             this.Controls.Add(this.StatusPanel);
             this.Controls.Add(this.StatusProgressBar);

@@ -457,7 +457,7 @@ namespace UGCS3
                             //}
                         }
 
-                        Console.WriteLine("Link " + linkquality + "%");
+                        //Console.WriteLine("Link " + linkquality + "%");
 
                         packets_not_Lost++;
                         recvpacketcount = packetSeqNo;
