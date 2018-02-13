@@ -124,7 +124,7 @@ namespace UGCS3
         private TrackBar htrackBar;
         private Button Update_Home_Button;
         private Button Clear_Map_Button;
-        private int MapZoomLevel = 0;
+        //private int MapZoomLevel = 0; remove this after stability test..
         private int size_grip_button = 1;
         private int grid_button_width = 600;
         private System.Speech.Synthesis.SpeechSynthesizer Speech;
@@ -134,6 +134,7 @@ namespace UGCS3
         //private Button ReadWayPointsButton;
         //private Button WriteWayPointsButton;
         #endregion
+
 
         #region UN-USED METHODS
         // Unsued Methods
@@ -163,16 +164,16 @@ namespace UGCS3
             MapControl_Rectangle = new Rectangle();
             MapControl_Rectangle_Mini = new Rectangle();
             DirectionMarkerPoints = new Point();
-            Text = "megasys v1.0.0";
+            Text = "PolarisAir V1.1.0";
 
             // Initialise classes
             gMapControl = new FlickerFreeGmapControl();
             GmapPanel = new FlickerFreePanel();
             SerialPortObject = new SerialPort();
             Mavlink_Protocol = new MavLinkSerialPacketClass(SerialPortObject);
-            xplane10 = new Xplane();
-            Speech = new SpeechSynthesizer();
-            DoUI_Timer = new Timer();
+            xplane10     = new Xplane();
+            Speech       = new SpeechSynthesizer();
+            DoUI_Timer   = new Timer();
             _bwWayPoints = new BackgroundWorker();
 
             // Place any objects properly          
@@ -213,6 +214,9 @@ namespace UGCS3
 
            var handle = ConsoleHelper.GetConsoleWindow();
            ConsoleHelper.ShowWindow(handle, ConsoleHelper.SW_SHOW);
+
+
+            gMapControl.Zoom = htrackBar.Value;
         }
 
 
@@ -352,19 +356,25 @@ namespace UGCS3
             gMapControl.Manager.BoostCacheEngine = true;
             gMapControl.MaxZoom = 20;
             gMapControl.MinZoom = 3;
-            gMapControl.Zoom = 5;
+            if(GPSSettings.Default.Map_Zoom < gMapControl.MinZoom)
+                gMapControl.Zoom = Settings.GPSSettings.Default.Map_Zoom; 
+            else
+                gMapControl.Zoom    = 5;  
             gMapControl.Dock = DockStyle.Fill;
             gMapControl.BorderStyle = BorderStyle.FixedSingle;
             gMapControl.MapProvider = GoogleHybridMapProvider.Instance;
             gMapControl.Refresh();
+            gMapControl.Invalidate();
             gMapControl.MouseClick += gMapControl_MouseClick;
             gMapControl.MouseDown += gMapControl_MouseDown;
             gMapControl.MouseMove += gMapControl_MouseMove;
             gMapControl.MouseUp += gMapControl_MouseUp;
             gMapControl.MouseHover += gMapControl_MouseHover;
             gMapControl.OnMarkerClick += gMapControl_OnMarkerClick;
+            gMapControl.OnMapZoomChanged += gMapControl_OnMapZoomChanged;
             GmapPanel.Controls.Add(gMapControl);
             this.Controls.Add(GmapPanel);
+
 
             // Overlays and Markers
             HeaderOverlay = new GMapOverlay("Main Overlay");
@@ -378,6 +388,7 @@ namespace UGCS3
             _GmapRoute.Stroke = routePen;
             HeaderOverlay.Markers.Add(_GmapDirectionalMarker);
 
+
             TargetOverlay.Markers.Add(target_marker);
             HeaderOverlay.Routes.Add(_GmapRoute);
             gMapControl.Overlays.Add(HeaderOverlay);
@@ -385,7 +396,7 @@ namespace UGCS3
             gMapControl.Overlays.Add(SurveyOverlay);
             gMapControl.Overlays.Add(PlaybackOverlay);
             gMapControl.ZoomAndCenterMarkers("Main Overlay");
-            gMapControl.Zoom = Settings.GPSSettings.Default.Map_Zoom;
+        
 
             this.WPCoordinates.Add(_HomeMarker.Position);
             this.WayPointOverlay = new GMapOverlay("WayPoint Overlay");
@@ -396,10 +407,9 @@ namespace UGCS3
             // Trackbar
             htrackBar = new TrackBar();
             htrackBar.TickFrequency = 1;
-            htrackBar.Minimum = gMapControl.MinZoom - 1;
+            htrackBar.Minimum = gMapControl.MinZoom;
             htrackBar.Maximum = gMapControl.MaxZoom;
             htrackBar.Value = (int)gMapControl.Zoom;
-            MapZoomLevel = htrackBar.Value;
             htrackBar.Size = new Size(200, 40);
             htrackBar.TickStyle = TickStyle.Both;
             htrackBar.Orientation = Orientation.Horizontal;
@@ -407,6 +417,8 @@ namespace UGCS3
             htrackBar.ValueChanged += htrackBar_ValueChanged;
             GmapPanel.Controls.Add(htrackBar);
             htrackBar.BringToFront();
+
+           
 
             // UpdateHome        
             Update_Home_Button = new Button();
@@ -689,6 +701,13 @@ namespace UGCS3
             SettingsCntrl.plotLatLng_button.Click += plotLatLng_button_Click;
             SettingsCntrl.BatteryVoltageTextBox.TextChanged += BatteryVoltageTextBox_TextChanged;
 
+
+        }
+
+        // Move to mao control
+        private void gMapControl_OnMapZoomChanged()
+        {
+            htrackBar.Value = (int)gMapControl.Zoom;
         }
 
 
@@ -1671,7 +1690,6 @@ namespace UGCS3
         #endregion
 
 
-
         #region MAP CONTROL REGION
         bool hovering = false;
         private void gMapControl_MouseHover(object sender, EventArgs e)
@@ -1814,9 +1832,8 @@ namespace UGCS3
         /// <param name="e"></param>
         private void htrackBar_ValueChanged(object sender, EventArgs e)
         {
-            MapZoomLevel = htrackBar.Value;
-            gMapControl.Zoom = MapZoomLevel;
-            Settings.GPSSettings.Default.Map_Zoom = MapZoomLevel;
+            gMapControl.Zoom = htrackBar.Value;
+            Settings.GPSSettings.Default.Map_Zoom = htrackBar.Value;
             Settings.GPSSettings.Default.Save();
         }
 
@@ -2577,7 +2594,7 @@ namespace UGCS3
                 if (!mission_planning_mode)
                 {
                     gMapControl.ZoomAndCenterMarkers("Main Overlay");
-                    gMapControl.Zoom = MapZoomLevel;
+                    gMapControl.Zoom = htrackBar.Value;
                 }
             }
         }
