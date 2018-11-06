@@ -1,6 +1,6 @@
 # PolarisGround - UGCS3
 Custom ground control station implemented in c#
-Developed by Hery A Mwenegoha.
+Developed by #Hery A Mwenegoha.
 
 Works with PolarisAir.
 
