@@ -10,8 +10,6 @@ namespace UGCS3
 {
     static class Program
     {
-        // GoogleMaps API
-        // AIzaSyD4BkAWzWCMyt4L8tSWOP9G4q2QFAbWyxQ
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -21,8 +19,8 @@ namespace UGCS3
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            SplashScreen.ShowScreen();
-            //Application.Run(new MainView());
+            //SplashScreen.ShowScreen(); // undo this if you want to run splash screen then cover application run
+            Application.Run(new MainView());
         }
     }
 }

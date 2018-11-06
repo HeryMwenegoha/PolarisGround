@@ -28,6 +28,8 @@ namespace UGCS3
         public static bool gps_command_sent = false;
         public static bool mission_start_sent = false;
 
+        public static bool start_hil_log = false;
+
         public struct WP_Item
         {
             public float lat;

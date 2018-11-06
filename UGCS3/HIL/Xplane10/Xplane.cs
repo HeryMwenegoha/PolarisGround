@@ -47,7 +47,7 @@ namespace UGCS3.HIL.Xplane10
             sendClient = new UdpClient(add,sendport);
 
             Console.WriteLine("Setting up Xplane10");
-            byte[] xplaneSettings = new byte[5 + 4 * 8];
+            byte[] xplaneSettings = new byte[5 + 4 * 9];
             xplaneSettings[0] = (byte)'D';
             xplaneSettings[1] = (byte)'S';
             xplaneSettings[2] = (byte)'E';
@@ -61,6 +61,8 @@ namespace UGCS3.HIL.Xplane10
             xplaneSettings[pos] = 0x4; // Mach, VVI, G-loads
             pos += 4;
             xplaneSettings[pos] = 0x6; // Atmosphere
+            pos += 4;
+            xplaneSettings[pos] = 0xB; // Decimal 11 - flight control surface deflection : elevator, aileron, rudder, nosewheel
             pos += 4;
             xplaneSettings[pos] = 0x10;// Decimal 16 - angular velocities 
             pos += 4;
@@ -125,7 +127,7 @@ namespace UGCS3.HIL.Xplane10
                         DATA[index][7] = BitConverter.ToSingle(udpdata, count + 8 * 4); ;
                         count         += 36; // 8 * float  
                     }
-                                  
+                                 
                     sitldata.pitchDeg  = (DATA[17][0]);
                     sitldata.rollDeg   = (DATA[17][1]);
                     sitldata.yawDeg    = (DATA[17][3]); // True heading - [2] | Mag Heading - [3] RANGE 0 -360
@@ -151,7 +153,8 @@ namespace UGCS3.HIL.Xplane10
 
                     // North is -ve Z and East is +ve X
                     sitldata.speedN = -DATA[21][5]; // (DATA[3][7] * 0.44704 * Math.Sin(sitldata.heading * deg2rad));
-                    sitldata.speedE = DATA[21][3]; // (DATA[3][7] * 0.44704 * Math.Cos(sitldata.heading * deg2rad));
+                    sitldata.speedE =  DATA[21][3]; // (DATA[3][7] * 0.44704 * Math.Cos(sitldata.heading * deg2rad));
+                    sitldata.speedD = -DATA[21][4];
 
                     // rad = tas^2 / (tan(angle) * G)
                     float turnrad = (float)(((DATA[3][7] * 0.44704) * (DATA[3][7] * 0.44704)) / (float)(9.8f * Math.Tan(sitldata.rollDeg * deg2rad)));
@@ -166,11 +169,30 @@ namespace UGCS3.HIL.Xplane10
                     sitldata.zAccel = (0-DATA[4][4]); // G's
                     sitldata.xAccel = DATA[4][5]; // G's
                     sitldata.yAccel = DATA[4][6]; // G's
+
+                    // control surface deflection
+                    sitldata.elevator = DATA[11][0];
+                    sitldata.aileron  = DATA[11][1];
+                    sitldata.rudder   = DATA[11][2];
+
+                    sitldata.throttle = DATA[25][0];
+                    sitldata.elevator = DATA[11][0];
+                    sitldata.aileron = DATA[11][1];
+                    sitldata.rudder = DATA[11][2];
+
+                    // log HIL data comming directly from xplane
+                    // log HIL control surfaces deflection coming from xplane
+                    // Data will be logged as fast as it is comming out
+                    if (!Variables.start_hil_log)
+                        return;
+
+                    LogHilData(sitldata);
                 }
             }
         }
 
-        public void SendToSim(float[] packet)
+
+        public void SendToSim(float[] packet, sitl_fdm inputs)
         {
             // Hil Channels from Main...
             // Roll, Pitch, Throttle, Yaw
@@ -183,12 +205,12 @@ namespace UGCS3.HIL.Xplane10
             pitch_out = mapConstrain(pitch_out, 1000,2000,-1, 1);
             rudder_out = mapConstrain(rudder_out,1000,2000, -1, 1);
             throttle_out = mapConstrain(throttle_out, 1000,2000,0, 1);
-            /*
-            roll_out     = Constrain(roll_out,    -1, 1);
-            pitch_out    = Constrain(pitch_out,   -1, 1);
-            rudder_out   = Constrain(rudder_out,  -1, 1);
-            throttle_out = Constrain(throttle_out, 0, 1);
-            */
+
+            inputs.inaileron = roll_out;
+            inputs.elevator = pitch_out;
+            inputs.throttle = throttle_out;
+            inputs.rudder = rudder_out;
+
             // sending only 1 packet instead of many
             byte[] Xplane = new byte[5 + 36 + 36];
 
@@ -234,6 +256,87 @@ namespace UGCS3.HIL.Xplane10
             }
         }
 
+        /// <summary>
+        /// Only used for verification of somethings..
+        /// </summary>
+        /// <param name="sitldata"></param>
+        public void LogHilData (sitl_fdm sitldata)
+        {
+            // add GPS delay to the data::
+            TimeSpan gpsspan = DateTime.Now - lastgpsupdate;
+            if (gpsspan.TotalMilliseconds >= GPS_rate)
+            {
+                lastgpsupdate = DateTime.Now;
+                sitl_fdmbuffer[gpsbufferindex % sitl_fdmbuffer.Length] = sitldata; // 0 - 5
+                // return buffer index + 5 = (3 + 5) = 8 % 6 = 2
+                oldgps = sitl_fdmbuffer[(gpsbufferindex + (sitl_fdmbuffer.Length - 1)) % sitl_fdmbuffer.Length];
+                gpsbufferindex++;
+            }
+
+
+            float lat       = (float)oldgps.latitude;
+            float lon       = (float)oldgps.longitude;
+            float hamsl     = (float)oldgps.altitude;
+            float hafl      = (float)oldgps.altitude;
+            float climbrate = 0;
+
+            float gspeed    = 0;
+            float airspeed  = 0;
+            float mav_link  = 0;
+            float rssi_link = 0;
+            float throttle  = (float)sitldata.throttle;
+
+            float pitch     = (float)sitldata.pitchDeg;   // deg
+            float pitchrate = (float)sitldata.pitchRate;  // dps
+            float roll      = (float)sitldata.rollDeg;    // deg
+            float rollrate  = (float)sitldata.rollRate;   // dps
+            float yaw       = (float)sitldata.yawDeg;     // deg
+            float yawrate   = (float)sitldata.yawRate;    // dps
+
+            // NED
+            float vgN        = (float)(oldgps.speedN);     // m/s 
+            float vgE        = (float)(oldgps.speedE);     // m/s
+            float vgD        = (float)(oldgps.speedD);     // m/s 
+
+            // NED
+            float accelX   = (float)(sitldata.xAccel * 1000); // (mg)
+            float accelY   = (float)(sitldata.yAccel * 1000); // (mg)
+            float accelZ   = (float)(sitldata.zAccel * 1000); // (mg)
+
+            float aileron  = (float)(sitldata.aileron);  // inputs by controller normalised to -1 1
+            float elevator = (float)(sitldata.elevator); // inputs by controller normalised to -1 1
+            float rudder   = (float)(sitldata.rudder);   // inputs by controller normalised to -1 1
+
+            Log.Log.logwritehil(lat,
+                        lon,
+                        hamsl,
+                        hafl,
+                        climbrate,
+                        gspeed,
+                        airspeed,
+                        mav_link,
+                        rssi_link,
+                        throttle,
+                        roll,
+                        pitch,
+                        yaw,
+                        rollrate,
+                        pitchrate,
+                        yawrate,
+                        accelX,
+                        accelY,
+                        accelZ,
+                        vgN,
+                        vgE,
+                        vgD,
+                        aileron,
+                        elevator,
+                        rudder,
+                        throttle
+                        );
+        }
+
+#if REMOVE
         public MAVLink.mavlink_hil_state_t Mavlink_PackHilState(sitl_fdm sitldata)
         {
             TimeSpan gpsspan = DateTime.Now - lastgpsupdate;
@@ -249,8 +352,7 @@ namespace UGCS3.HIL.Xplane10
 
                 gpsbufferindex++;
             }
-
-
+           
             MAVLink.mavlink_hil_state_t hilstate = new MAVLink.mavlink_hil_state_t();
 
             hilstate.time_usec = (UInt64)lastgpsupdate.Ticks; // time in microseconds since last gps update
@@ -283,17 +385,12 @@ namespace UGCS3.HIL.Xplane10
             hilstate.yacc = (short)(sitldata.yAccel * 1000); // (mg)
             hilstate.zacc = (short)(sitldata.zAccel * 1000); // (mg)
 
-            return hilstate;
-            /*
-            AASCoGroundControl_V1._mavlinkInterfaceClass.sendPacket(hilstate);
-
-            AASCoGroundControl_V1._mavlinkInterfaceClass.sendPacket(new MAVLink.mavlink_vfr_hud_t()
-            {
-                airspeed = (float)sitldata.airspeed
-            });
-            */ 
+            return hilstate;         
         }
+#endif
 
+
+#if REMOVE
         public MAVLink.mavlink_vfr_hud_t Mavlink_VfrAirspeed(sitl_fdm sitldata)
         {
             MAVLink.mavlink_vfr_hud_t vfr_t = new MAVLink.mavlink_vfr_hud_t();
@@ -301,6 +398,7 @@ namespace UGCS3.HIL.Xplane10
             vfr_t.heading = (short)sitldata.heading;
             return vfr_t;
         }
+#endif
 
         public void disconnect()
         {

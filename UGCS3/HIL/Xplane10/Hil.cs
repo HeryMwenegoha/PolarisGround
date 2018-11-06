@@ -13,7 +13,7 @@ namespace UGCS3.HIL.Xplane10
             // packets sent from xplan simulator will be decoded to the following data - little endian
             // rates in degrees per second
             // accelerations in m/s2 in body frame
-            public double latitude, longitude, altitude, heading, speedN, speedE, xAccel, yAccel, zAccel, rollRate, pitchRate, yawRate, rollDeg, pitchDeg, yawDeg, airspeed;
+            public double latitude, longitude, altitude, heading, speedN, speedE, speedD, xAccel, yAccel, zAccel, rollRate, pitchRate, yawRate, rollDeg, pitchDeg, yawDeg, airspeed, elevator, aileron, rudder, throttle, inaileron, inelevator, inrudder, inthrottle;
             public UInt32 magic; // 0x4c56414e
         };
 

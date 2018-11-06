@@ -133,6 +133,13 @@ namespace UGCS3.UsableControls
             final_video = new VideoCaptureDevice();
 
             loaded = true;
+
+            buttonLog.MouseClick += hilLog;
+        }
+
+        private void hilLog(object sender, MouseEventArgs e)
+        {
+            Variables.start_hil_log = true;
         }
 
         private void ZedComboBox_SelectedIndexChanged(object sender, EventArgs e)

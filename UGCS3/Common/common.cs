@@ -30,5 +30,31 @@ namespace UGCS3.Common
             grad = grad * 100;
             return grad;
         }
+
+        public static float rad2deg = (float)(180 / Math.PI);
+
+        public static float ft2m = 0.3048F;
+
+        public static float deg2rad = (float)Math.PI / 180;
+
+        public static int REV_pitch = 1, REV_roll = 1, REV_yaw = 1, REV_throttle = 1;
+
+        public static float Constrain(float val, float min, float max)
+        {
+            if (val > max)
+                val = max;
+            else if (val < min)
+                val = min;
+
+            return val;
+        }
+
+        public static float mapConstrain(float val, float xmin, float xmax, float min, float max)
+        {
+            float ops = ((val - xmin) / (xmax - xmin)) * (max - min) + min;
+            return ops;
+        }
+
+
     }
 }

@@ -1,11 +1,31 @@
- /*
-  * This Program has been created by Hery A Mwenegoha (C) 2017
-  * First Public release February 2018
-  * Use this with the custom flight control system
-  * mavlink framing implemented with some custom changes.
-  * Compatibility VS2013 - VS2015
-  * Still working on compatibility for VS2017
+/*
+   MainView.cs - Calls main form and other interfaces
+   Copyright (C) 2017  Hery A Mwenegoha. All rights reserved.
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>
+*/
+
+/* 
+ * This Program has been created by Hery A Mwenegoha(C) 2017
+ * First Public release February 2018
+ * Use this with the custom flight control system
+ * mavlink framing implemented with some custom changes.
+ * Compatibility VS2013 - VS2015
+ * Still working on compatibility for VS2017
+ * Still a long way to go until fully functional, let me know if interested in helping out
  */
+
 #define VS2015
 using System;
 using System.Collections.Generic;
@@ -65,6 +85,7 @@ namespace UGCS3
             e.Cancel = true;
             waypoint_grid_button_Click(sender, e);
         }
+
 
         #region GLOBAL VARIABLES
         // MainForm is used to handle waypoint data grid view as well as all other waypointing functions
@@ -150,9 +171,6 @@ namespace UGCS3
         /// <param name="e"></param>
         private void MainView_Load(object sender, EventArgs e)
         {     
-            // hide the form first  
-            this.Hide();
-
             this.Hide();
 
             // maximise
@@ -164,7 +182,7 @@ namespace UGCS3
             MapControl_Rectangle = new Rectangle();
             MapControl_Rectangle_Mini = new Rectangle();
             DirectionMarkerPoints = new Point();
-            Text = "PolarisAir V1.1.0";
+            Text = "Epoch";
 
             // Initialise classes
             gMapControl = new FlickerFreeGmapControl();
@@ -180,8 +198,8 @@ namespace UGCS3
             Setup_Controls();
 
             // add resize event
-            //ReadWayPointsButton = new Button();
-            //WriteWayPointsButton = new Button();
+            // ReadWayPointsButton = new Button();
+            // WriteWayPointsButton = new Button();
             SettingsButton.Click += SettingsButton_Click;
             RadiusNumericUpDown.ValueChanged += RadiusNumericUpDown_ValueChanged;
             ReadWayPointsButton.Click += ReadWayPointsButton_Click;
@@ -200,21 +218,17 @@ namespace UGCS3
             _bwWayPoints.WorkerSupportsCancellation = true;
             _bwWayPoints.WorkerReportsProgress = true;
 
-            // declare succesful load
+            // declare succesful load 
             Console.WriteLine("Application Loaded: " + DateTime.Now);
+            //Console.WriteLine("Application Loaded: " + DateTime.Now.ToLongTimeString() +":"+ DateTime.Now.Millisecond);
 
-            
-            //this.Icon = Properties.Resources.aaso_planner_icon_2015_256x256_;
 
-            // show form
             this.Show();
-
-            // close splash screen
-            SplashScreen.closeForm();
-
-           var handle = ConsoleHelper.GetConsoleWindow();
-           ConsoleHelper.ShowWindow(handle, ConsoleHelper.SW_SHOW);
-
+#if SPLASH
+            SplashScreen.closeForm(); // close splash and run application form
+            var handle = ConsoleHelper.GetConsoleWindow();
+            ConsoleHelper.ShowWindow(handle, ConsoleHelper.SW_SHOW);
+#endif
 
             gMapControl.Zoom = htrackBar.Value;
         }
@@ -704,6 +718,7 @@ namespace UGCS3
 
         }
 
+
         // Move to mao control
         private void gMapControl_OnMapZoomChanged()
         {
@@ -791,22 +806,14 @@ namespace UGCS3
         #endregion
 
 
-        #region MAINVIEW EVENTS
-        /// <summary>
-        /// Variables
-        /// </summary>
-        bool mission_planning_mode = true;
-        ToolTip tip;
-
-
-
+        #region SETTINGS FORM
+        OptimisedForm settingsForm;
+        bool show_settingsForm = false;
         /// <summary>
         ///  settings button clicked
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        OptimisedForm settingsForm;
-        bool show_settingsForm = false;
         private void SettingsButton_Click(object sender, EventArgs e)
         {
             if (show_settingsForm == false)
@@ -831,55 +838,41 @@ namespace UGCS3
                 settingsForm.Hide();
                 settingsForm = null;
             }
-
-            return;
-
-            /*
-            if (fraction_GmapSize == 1)
-            {
-                float width = this.ClientSize.Width;
-                float cntrl_width = this.SettingsCntrl.ClientSize.Width - 5;
-                fraction_GmapSize = 1 - (cntrl_width / width);
-
-                settingsForm = new OptimisedForm();
-                settingsForm.FormBorderStyle = FormBorderStyle.None;
-                settingsForm.Controls.Add(SettingsCntrl);
-                SettingsCntrl.Location = new Point(0, 0);
-                settingsForm.ClientSize = SettingsCntrl.Size;
-                settingsForm.Show();
-
-                //SettingsCntrl.Show();
-            }
-            else
-            {
-                fraction_GmapSize = 1;
-
-                settingsForm.Controls.Remove(SettingsCntrl);
-                settingsForm.Hide();
-                settingsForm = null;
-
-                //SettingsCntrl.Hide();
-            }
-            // Resize_Controls();
-            */
         }
-
-        private void SettingsForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            e.Cancel = false;
-            SettingsButton_Click(sender,  e);
-        }
-
 
         /// <summary>
-        /// Uploading parameters
+        /// hide form and run in background
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void UploadButton_Click(object sender, EventArgs e)
+        private void SettingsForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Upload_Parameter();
+            e.Cancel = false;
+            SettingsButton_Click(sender, e);
         }
+
+        /// <summary>
+        /// settings button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SettingsButton_MouseEnter(object sender, EventArgs e)
+        {
+            if (tip != null)
+            {
+                tip.Dispose();
+                tip = null;
+            }
+            tip = new ToolTip();
+            tip.Show("Settings Bar", SettingsButton);
+        }
+        #endregion
+
+
+
+        #region MAINVIEW EVENTS
+        bool mission_planning_mode = true;
+        ToolTip tip;
 
 
         /// <summary>
@@ -905,17 +898,6 @@ namespace UGCS3
         /// <param name="e"></param>
         private void Flight_Plan_Button_Click(object sender, EventArgs e)
         {
-
-            /*
-            mythread = new System.Threading.Thread(new System.Threading.ThreadStart(shomyForm));
-            mythread.IsBackground = true;
-            mythread.Name = "Shit";
-            mythread.SetApartmentState(System.Threading.ApartmentState.STA);
-            mythread.Start();
-            return;
-            */
-
-
             mission_planning_mode = !mission_planning_mode;
 
             WPSeq_ComboBox.Items.Clear();
@@ -1053,43 +1035,11 @@ namespace UGCS3
         {
             MessageBox.Show(Variables.rollDeg.ToString());
         }
-
-        /// <summary>
-        /// upload paramters
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void UploadButton_MouseEnter(object sender, EventArgs e)
-        {
-            if (tip != null)
-            {
-                tip.Dispose();
-                tip = null;
-            }
-            tip = new ToolTip();
-            tip.Show("Upload Changed Parameters", UploadButton);
-        }
+#endregion
 
 
-        /// <summary>
-        /// settings button
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SettingsButton_MouseEnter(object sender, EventArgs e)
-        {
-            if (tip != null)
-            {
-                tip.Dispose();
-                tip = null;
-            }
-            tip = new ToolTip();
-            tip.Show("Settings Bar", SettingsButton);
-        }
-        #endregion
 
-
-        #region MAIN BACKGROUND WORKER
+#region MAIN BACKGROUND WORKER
         /// <summary>
         ///  initialise the background worker -> called only in serialPort
         /// </summary>
@@ -1184,84 +1134,89 @@ namespace UGCS3
                 }
                 else
                 {
-                    byte[] buffer = Mavlink_Protocol.readMavPackets();
 
+#region MAVLINK REGION
+                    byte[] buffer = Mavlink_Protocol.readMavPackets();
                     if (buffer != null)
                     {
                         // receiving parameter list
                         switch (buffer[5])
                         {
+                            
                             case (byte)MAVLink.MAVLINK_MSG_ID.PARAM_VALUE:
-                                MAVLink.mavlink_param_value_t received_paramter_t = buffer.ByteArrayToStructure<MAVLink.mavlink_param_value_t>(6);
-                                string param_name = ASCIIEncoding.ASCII.GetString(received_paramter_t.param_id, 0, 15);
-                                ushort param_index = received_paramter_t.param_index;
-                                ushort param_count = received_paramter_t.param_count;
-                                float param_value = received_paramter_t.param_value;
-
-                                if (Variables.WAITING_FOR_PARAM_LIST)
                                 {
-                                    // Set the UAV ID
-                                    Variables.UAVID = buffer[3];
-                                    // write all parameters to the customgrid
-                                    try
+                                    MAVLink.mavlink_param_value_t received_paramter_t = buffer.ByteArrayToStructure<MAVLink.mavlink_param_value_t>(6);
+                                    string param_name = ASCIIEncoding.ASCII.GetString(received_paramter_t.param_id, 0, 15);
+                                    ushort param_index = received_paramter_t.param_index;
+                                    ushort param_count = received_paramter_t.param_count;
+                                    float param_value = received_paramter_t.param_value;
+
+                                    if (Variables.WAITING_FOR_PARAM_LIST)
                                     {
-                                        string _updated_param_name = "";
-                                        if (this.InvokeRequired)
+                                        // Set the UAV ID
+                                        Variables.UAVID = buffer[3];
+                                        // write all parameters to the customgrid
+                                        try
                                         {
-                                            this.Invoke(new Action(() => Parameter_Form.Display_Parameters(param_index, param_count, param_name, this.Location, this.Size)));
-                                            _updated_param_name = Parameter_Form.ParameterIdLabel.Text;
-                                            //string index = Parameter_Form.ParameterNumberLabel.Text;
+                                            string _updated_param_name = "";
+                                            if (this.InvokeRequired)
+                                            {
+                                                this.Invoke(new Action(() => Parameter_Form.Display_Parameters(param_index, param_count, param_name, this.Location, this.Size)));
+                                                _updated_param_name = Parameter_Form.ParameterIdLabel.Text;
+                                                //string index = Parameter_Form.ParameterNumberLabel.Text;
+                                            }
+                                            else
+                                            {
+                                                _updated_param_name = Parameter_Form.ParameterIdLabel.Text;
+                                            }
+
+                                            Log.Log.logparameter(_updated_param_name, param_index, param_value, Variables.UAVID);
+
+                                            this.Invoke(new Action(() => CustomDataGridCntrl.Add_Rows(received_paramter_t.param_index, _updated_param_name, param_value, 3, 0.05F, Int16.MinValue, Int16.MaxValue, received_paramter_t.param_type)));
+
+                                            Console.WriteLine("UAV" + '\t' + Variables.UAVID + " " + '\t' + _updated_param_name + " " + '\t' + received_paramter_t.param_value + '\t' + received_paramter_t.param_index + '\t' + received_paramter_t.param_count);
+
+                                            if (param_index + 1 == param_count)
+                                            {
+                                                this.Invoke(new Action(() => this.SerialButton.Enabled = true));
+
+                                                this.Invoke(new Action(() => Parameter_Form.Hide()));
+                                                this.Invoke(new Action(() => Parameter_Form.Close()));
+                                                this.Invoke(new Action(() => Parameter_Form.Dispose()));
+                                            }
+
+                                            if (param_index + 1 == param_count)
+                                            {
+                                                Variables.WAITING_FOR_PARAM_LIST = false;
+                                                Stop_TimerEvent(LIST_TIMER_EVENTS.PARAMETER_LIST, 10);
+                                            }
                                         }
-                                        else
+                                        catch (Exception ex)
                                         {
-                                            _updated_param_name = Parameter_Form.ParameterIdLabel.Text;
-                                        }
-
-                                        Log.Log.logparameter(_updated_param_name, param_index, param_value, Variables.UAVID);
-
-                                        this.Invoke(new Action(() => CustomDataGridCntrl.Add_Rows(received_paramter_t.param_index, _updated_param_name, param_value, 3, 0.05F, Int16.MinValue, Int16.MaxValue, received_paramter_t.param_type)));
-
-                                        Console.WriteLine("UAV" + '\t' + Variables.UAVID + " " + '\t' + _updated_param_name + " " + '\t' + received_paramter_t.param_value + '\t' + received_paramter_t.param_index + '\t' + received_paramter_t.param_count);
-
-                                        if (param_index + 1 == param_count)
-                                        {
-                                            this.Invoke(new Action(() => this.SerialButton.Enabled = true));
-
-                                            this.Invoke(new Action(() => Parameter_Form.Hide()));
-                                            this.Invoke(new Action(() => Parameter_Form.Close()));
-                                            this.Invoke(new Action(() => Parameter_Form.Dispose()));
-                                        }
-
-                                        if (param_index + 1 == param_count)
-                                        {
-                                            Variables.WAITING_FOR_PARAM_LIST = false;
-                                            Stop_TimerEvent(LIST_TIMER_EVENTS.PARAMETER_LIST, 10);
+                                            Console.WriteLine("Receiving Parameter Error: " + ex.Message);
                                         }
                                     }
-                                    catch (Exception ex)
+                                    else
                                     {
-                                        Console.WriteLine("Receiving Parameter Error: " + ex.Message);
-                                    }
-                                }
-                                else
-                                {
-                                    if (Variables.UAVID == buffer[3])
-                                    {
-                                        // messages sent from MAV to confirm receiving parameters sent..
-                                        // since we know the index and value of parameter we sent check against the index and value received..
-                                        if (IGNORE_PARAMETERS)
+                                        if (Variables.UAVID == buffer[3])
                                         {
-                                            // set by the lasped timer to ignore sending of other paramters if the previous paramter has failed.
-                                            // either MAV is to far out and we are wasting resources trying to send other paramters
-                                        }
-                                        else
-                                        {
-                                            this.Invoke(new Action(() => UploadParameter_Status(param_name)));
-                                            this.Invoke(new Action(() => Upload_Parameter()));
+                                            // messages sent from MAV to confirm receiving parameters sent..
+                                            // since we know the index and value of parameter we sent check against the index and value received..
+                                            if (IGNORE_PARAMETERS)
+                                            {
+                                                // set by the lasped timer to ignore sending of other paramters if the previous paramter has failed.
+                                                // either MAV is to far out and we are wasting resources trying to send other paramters
+                                            }
+                                            else
+                                            {
+                                                this.Invoke(new Action(() => UploadParameter_Status(param_name)));
+                                                this.Invoke(new Action(() => Upload_Parameter()));
+                                            }
                                         }
                                     }
                                 }
                                 break;
+                            
 
                             case (byte)MAVLink.MAVLINK_MSG_ID.HEARTBEAT:
                                 if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
@@ -1290,23 +1245,27 @@ namespace UGCS3
                                 }
                                 break;
 
-                            case (byte)MAVLink.MAVLINK_MSG_ID.RAW_IMU:
-                                if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
-                                {
-                                    MAVLink.mavlink_raw_imu_t raw_imu_t = buffer.ByteArrayToStructure<MAVLink.mavlink_raw_imu_t>(6);
-                                    Variables.gyroX = raw_imu_t.xgyro;
-                                    Variables.gyroY = raw_imu_t.ygyro;
-                                    Variables.gyroZ = raw_imu_t.zgyro;
-                                    Variables.accelX = raw_imu_t.xacc;
-                                    Variables.accelY = raw_imu_t.yacc;
-                                    Variables.accelZ = raw_imu_t.zacc;
-                                    Variables.magX = raw_imu_t.xmag;
-                                    Variables.magY = raw_imu_t.ymag;
-                                    Variables.magZ = raw_imu_t.zmag;
 
-                                    // Console.WriteLine("Hi");
+                            case (byte)MAVLink.MAVLINK_MSG_ID.RAW_IMU:
+                                {
+                                    if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
+                                    {
+                                        MAVLink.mavlink_raw_imu_t raw_imu_t = buffer.ByteArrayToStructure<MAVLink.mavlink_raw_imu_t>(6);
+                                        Variables.gyroX = raw_imu_t.xgyro;
+                                        Variables.gyroY = raw_imu_t.ygyro;
+                                        Variables.gyroZ = raw_imu_t.zgyro;
+                                        Variables.accelX = raw_imu_t.xacc;
+                                        Variables.accelY = raw_imu_t.yacc;
+                                        Variables.accelZ = raw_imu_t.zacc;
+                                        Variables.magX = raw_imu_t.xmag;
+                                        Variables.magY = raw_imu_t.ymag;
+                                        Variables.magZ = raw_imu_t.zmag;
+
+                                        // Console.WriteLine("Hi");
+                                    }
                                 }
                                 break;
+
 
                             case (byte)MAVLink.MAVLINK_MSG_ID.GLOBAL_POSITION_SETPOINT_INT:
                                 {
@@ -1324,77 +1283,88 @@ namespace UGCS3
 
 
                             case (byte)MAVLink.MAVLINK_MSG_ID.GPS_RAW_INT:
-                                if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
                                 {
-                                    MAVLink.mavlink_gps_raw_int_t received_gps = buffer.ByteArrayToStructure<MAVLink.mavlink_gps_raw_int_t>(6);
-                                    Variables.latitude = (float)(received_gps.lat * 1e-7);
-                                    Variables.longitude = (float)(received_gps.lon * 1e-7);
-                                    Variables.hMSL = (float)(received_gps.alt * 1e-3);
-                                    Variables.gSpeed = (float)(received_gps.vel * 1e-2);
-                                    Variables.cog = (float)(received_gps.cog * 1e-2);
-                                    Variables.fix_type = received_gps.fix_type;
-                                    Variables.numSatellites = received_gps.satellites_visible;
-                                    Variables.gps_altitude = (float)(received_gps.alt * 1e-3);
+                                    if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
+                                    {
+                                        MAVLink.mavlink_gps_raw_int_t received_gps = buffer.ByteArrayToStructure<MAVLink.mavlink_gps_raw_int_t>(6);
+                                        Variables.latitude = (float)(received_gps.lat * 1e-7);
+                                        Variables.longitude = (float)(received_gps.lon * 1e-7);
+                                        Variables.hMSL = (float)(received_gps.alt * 1e-3);
+                                        Variables.gSpeed = (float)(received_gps.vel * 1e-2);
+                                        Variables.cog = (float)(received_gps.cog * 1e-2);
+                                        Variables.fix_type = received_gps.fix_type;
+                                        Variables.numSatellites = received_gps.satellites_visible;
+                                        Variables.gps_altitude = (float)(received_gps.alt * 1e-3);
 
 
 
-                                    float Time = (float)received_gps.time_usec;
+                                        float Time = (float)received_gps.time_usec;
 
-                                    UInt64 hours = (UInt64)Time / 100000;
-                                    UInt64 minutes = ((UInt64)Time / 1000) - (hours * 100);
-                                    byte seconds = Convert.ToByte(((Time * 1e-3) % 1) * 100);
-                                    // DateTime current_date = new DateTime();
-
-
-                                    //Console.WriteLine("Time " + received_gps.time_usec +" UTC "+hours +":"+minutes + ":" + seconds);
+                                        UInt64 hours = (UInt64)Time / 100000;
+                                        UInt64 minutes = ((UInt64)Time / 1000) - (hours * 100);
+                                        byte seconds = Convert.ToByte(((Time * 1e-3) % 1) * 100);
+                                        // DateTime current_date = new DateTime();
 
 
-                                    Log.Log.logwrite(Variables.latitude, Variables.longitude, Variables.hMSL, Variables.imu_altitude, Variables.imu_climbrate, Variables.gSpeed, Variables.airspeed, Mavlink_Protocol.linkquality, Variables.link_rssi, Variables.throttle, Variables.rollDeg, Variables.pitchDeg, Variables.yawDeg);
+                                        //Console.WriteLine("Time " + received_gps.time_usec +" UTC "+hours +":"+minutes + ":" + seconds);
 
-                                    // Console.WriteLine("Fix " + Variables.fix_type+" Lat "+ Variables.latitude + " Lon " + Variables.longitude + " Speed "+Variables.gSpeed);
+
+                                        Log.Log.logwrite(Variables.latitude, Variables.longitude, Variables.hMSL, Variables.imu_altitude, Variables.imu_climbrate, Variables.gSpeed, Variables.airspeed, Mavlink_Protocol.linkquality, Variables.link_rssi, Variables.throttle, Variables.rollDeg, Variables.pitchDeg, Variables.yawDeg);
+
+                                        // Console.WriteLine("Fix " + Variables.fix_type+" Lat "+ Variables.latitude + " Lon " + Variables.longitude + " Speed "+Variables.gSpeed);
+                                    }
                                 }
                                 break;
+
 
                             case (byte)MAVLink.MAVLINK_MSG_ID.SERVO_OUTPUT_RAW:
-                                if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
                                 {
-                                    MAVLink.mavlink_servo_output_raw_t servo_t = buffer.ByteArrayToStructure<MAVLink.mavlink_servo_output_raw_t>(6);
-                                    Variables.chan1 = servo_t.servo1_raw;
-                                    Variables.chan2 = servo_t.servo2_raw;
-                                    Variables.chan3 = (ushort)(servo_t.servo3_raw);
-                                    Variables.chan4 = servo_t.servo4_raw;
-                                    Variables.chan5 = servo_t.servo5_raw;
-                                    Variables.chan6 = servo_t.servo6_raw;
-                                    Variables.chan7 = servo_t.servo7_raw;
-                                    Variables.chan8 = servo_t.servo8_raw;
+                                    if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
+                                    {
+                                        MAVLink.mavlink_servo_output_raw_t servo_t = buffer.ByteArrayToStructure<MAVLink.mavlink_servo_output_raw_t>(6);
+                                        Variables.chan1 = servo_t.servo1_raw;
+                                        Variables.chan2 = servo_t.servo2_raw;
+                                        Variables.chan3 = (ushort)(servo_t.servo3_raw);
+                                        Variables.chan4 = servo_t.servo4_raw;
+                                        Variables.chan5 = servo_t.servo5_raw;
+                                        Variables.chan6 = servo_t.servo6_raw;
+                                        Variables.chan7 = servo_t.servo7_raw;
+                                        Variables.chan8 = servo_t.servo8_raw;
 
-                                    // Console.WriteLine("AUX " + Variables.chan1 + " " + Variables.chan2 + " " +Variables.chan3 + " " +Variables.chan4 + " " +Variables.chan8);
+                                        // Console.WriteLine("AUX " + Variables.chan1 + " " + Variables.chan2 + " " +Variables.chan3 + " " +Variables.chan4 + " " +Variables.chan8);
+                                    }
                                 }
                                 break;
+
 
                             case (byte)MAVLink.MAVLINK_MSG_ID.VFR_HUD:
-                                if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
                                 {
-                                    MAVLink.mavlink_vfr_hud_t vfr_t = buffer.ByteArrayToStructure<MAVLink.mavlink_vfr_hud_t>(6);
-                                    Variables.airspeed = vfr_t.airspeed;
-                                    Variables.throttle = vfr_t.throttle;
-                                    Variables.vfr_groundspeed = vfr_t.groundspeed;
-                                    Variables.imu_altitude = vfr_t.alt;
-                                    Variables.imu_climbrate = (vfr_t.climb * 100); // cms/s
-                                    // if not in hilmode then this is equivakent to yaw
-                                    Variables.heading = vfr_t.heading; // true heading indicator if not present then it is equivalent to the estimated true heading by yaw
+                                    if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
+                                    {
+                                        MAVLink.mavlink_vfr_hud_t vfr_t = buffer.ByteArrayToStructure<MAVLink.mavlink_vfr_hud_t>(6);
+                                        Variables.airspeed = vfr_t.airspeed;
+                                        Variables.throttle = vfr_t.throttle;
+                                        Variables.vfr_groundspeed = vfr_t.groundspeed;
+                                        Variables.imu_altitude = vfr_t.alt;
+                                        Variables.imu_climbrate = (vfr_t.climb * 100); // cms/s
+                                                                                       // if not in hilmode then this is equivakent to yaw
+                                        Variables.heading = vfr_t.heading; // true heading indicator if not present then it is equivalent to the estimated true heading by yaw
+                                    }
                                 }
                                 break;
 
+
                             case (byte)MAVLink.MAVLINK_MSG_ID.SYS_STATUS:
-                                if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
                                 {
-                                    MAVLink.mavlink_sys_status_t sys_status_t = buffer.ByteArrayToStructure<MAVLink.mavlink_sys_status_t>(6);
-                                    Variables.batteryVolts = (float)sys_status_t.voltage_battery * 0.001f; // comes in millivolts
-                                    Variables.error1 = sys_status_t.errors_count1;
-                                    Variables.error2 = sys_status_t.errors_count2;
-                                    Variables.error3 = sys_status_t.errors_count3;
-                                    Variables.link_rssi = sys_status_t.drop_rate_comm;
+                                    if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
+                                    {
+                                        MAVLink.mavlink_sys_status_t sys_status_t = buffer.ByteArrayToStructure<MAVLink.mavlink_sys_status_t>(6);
+                                        Variables.batteryVolts = (float)sys_status_t.voltage_battery * 0.001f; // comes in millivolts
+                                        Variables.error1 = sys_status_t.errors_count1;
+                                        Variables.error2 = sys_status_t.errors_count2;
+                                        Variables.error3 = sys_status_t.errors_count3;
+                                        Variables.link_rssi = sys_status_t.drop_rate_comm;
+                                    }
                                 }
                                 break;
 
@@ -1402,29 +1372,33 @@ namespace UGCS3
                              * Reading Waypoints
                              */
                             case (byte)MAVLink.MAVLINK_MSG_ID.MISSION_COUNT:
-                                if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
                                 {
-                                    MAVLink.mavlink_mission_count_t mission_count = buffer.ByteArrayToStructure<MAVLink.mavlink_mission_count_t>(6);
-                                    Variables.mission_count = mission_count.count;
-                                    Variables.mission_seq = 0;
-                                    //Console.WriteLine("Total waypoints: " + mission_count.count);
+                                    if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
+                                    {
+                                        MAVLink.mavlink_mission_count_t mission_count = buffer.ByteArrayToStructure<MAVLink.mavlink_mission_count_t>(6);
+                                        Variables.mission_count = mission_count.count;
+                                        Variables.mission_seq = 0;
+                                        //Console.WriteLine("Total waypoints: " + mission_count.count);
+                                    }
                                 }
                                 break;
 
 
                             case (byte)MAVLink.MAVLINK_MSG_ID.MISSION_ITEM:
-                                if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
                                 {
-                                    MAVLink.mavlink_mission_item_t mission_item = buffer.ByteArrayToStructure<MAVLink.mavlink_mission_item_t>(6);
-                                    Variables.mission_seq = mission_item.seq + 1;
+                                    if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
+                                    {
+                                        MAVLink.mavlink_mission_item_t mission_item = buffer.ByteArrayToStructure<MAVLink.mavlink_mission_item_t>(6);
+                                        Variables.mission_seq = mission_item.seq + 1;
 
-                                    Variables.RecWP[mission_item.seq, 0] = mission_item.x;
-                                    Variables.RecWP[mission_item.seq, 1] = mission_item.y;
-                                    Variables.RecWP[mission_item.seq, 2] = mission_item.z;
-                                    Variables.RecWP[mission_item.seq, 3] = mission_item.param1;
-                                    Variables.RecWP[mission_item.seq, 4] = mission_item.command;
+                                        Variables.RecWP[mission_item.seq, 0] = mission_item.x;
+                                        Variables.RecWP[mission_item.seq, 1] = mission_item.y;
+                                        Variables.RecWP[mission_item.seq, 2] = mission_item.z;
+                                        Variables.RecWP[mission_item.seq, 3] = mission_item.param1;
+                                        Variables.RecWP[mission_item.seq, 4] = mission_item.command;
 
-                                    //Console.WriteLine(mission_item.seq +"  "+ mission_item.x +"  "+mission_item.y + "  " + mission_item.z + "  "+ mission_item.param1 + "  "+mission_item.command);
+                                        //Console.WriteLine(mission_item.seq +"  "+ mission_item.x +"  "+mission_item.y + "  " + mission_item.z + "  "+ mission_item.param1 + "  "+mission_item.command);
+                                    }
                                 }
                                 break;
 
@@ -1432,60 +1406,107 @@ namespace UGCS3
                              * Sending Waypoints
                              */
                             case (byte)MAVLink.MAVLINK_MSG_ID.MISSION_REQUEST:
-                                if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
                                 {
-                                    MAVLink.mavlink_mission_request_t mission_request = buffer.ByteArrayToStructure<MAVLink.mavlink_mission_request_t>(6);
-                                    Variables.request_missionitem_target_system = mission_request.target_system;
-                                    Variables.requested_missionitem_seq = mission_request.seq;
-                                }
-                                break;
-
-                            case (byte)MAVLink.MAVLINK_MSG_ID.COMMAND_ACK:
-                                if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
-                                {
-                                    MAVLink.mavlink_command_ack_t command_ack = buffer.ByteArrayToStructure<MAVLink.mavlink_command_ack_t>(6);
-                                    switch (command_ack.command)
+                                    if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
                                     {
-                                        case (ushort)MAVLink.MAV_CMD.MISSION_START:
-                                            if (Variables.mission_start_sent == true)
-                                            {
-                                                Console.WriteLine("Mission Start Sent");
-                                            }
-                                            break;
-
-                                        case (ushort)MAVLink.MAV_CMD.LOITER_TIME:
-                                            if (Variables.gps_command_sent == true)
-                                            {
-                                                Console.WriteLine("Loiter Command Sent");
-                                            }
-                                            break;
+                                        MAVLink.mavlink_mission_request_t mission_request = buffer.ByteArrayToStructure<MAVLink.mavlink_mission_request_t>(6);
+                                        Variables.request_missionitem_target_system = mission_request.target_system;
+                                        Variables.requested_missionitem_seq = mission_request.seq;
                                     }
                                 }
                                 break;
 
-                            case (byte)MAVLink.MAVLINK_MSG_ID.MISSION_ACK:
-                                if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
+
+                            case (byte)MAVLink.MAVLINK_MSG_ID.COMMAND_ACK:
                                 {
-                                    MAVLink.mavlink_mission_ack_t mission_ack = buffer.ByteArrayToStructure<MAVLink.mavlink_mission_ack_t>(6);
-                                    Variables.mission_ack = mission_ack.type;
-                                    Variables.ack_message_received = true;
+                                    if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
+                                    {
+                                        MAVLink.mavlink_command_ack_t command_ack = buffer.ByteArrayToStructure<MAVLink.mavlink_command_ack_t>(6);
+                                        switch (command_ack.command)
+                                        {
+                                            case (ushort)MAVLink.MAV_CMD.MISSION_START:
+                                                if (Variables.mission_start_sent == true)
+                                                {
+                                                    Console.WriteLine("Mission Start Sent");
+                                                }
+                                                break;
+
+                                            case (ushort)MAVLink.MAV_CMD.LOITER_TIME:
+                                                if (Variables.gps_command_sent == true)
+                                                {
+                                                    Console.WriteLine("Loiter Command Sent");
+                                                }
+                                                break;
+                                        }
+                                    }
+                                }
+                                break;
+
+
+                            case (byte)MAVLink.MAVLINK_MSG_ID.MISSION_ACK:
+                                {
+                                    if (Variables.UAVID == buffer[3] && !Variables.WAITING_FOR_PARAM_LIST)
+                                    {
+                                        MAVLink.mavlink_mission_ack_t mission_ack = buffer.ByteArrayToStructure<MAVLink.mavlink_mission_ack_t>(6);
+                                        Variables.mission_ack = mission_ack.type;
+                                        Variables.ack_message_received = true;
+                                    }
                                 }
                                 break;
                         }
 
                     }
+#endregion
+
                     System.Threading.Thread.Sleep(1);
-                }
+
+
+#region HIL_REGION
+                    processXplane();
+#endregion
+                    }
             }
         }
-        #endregion
 
 
-        #region DOUI TIMER REGION
+        /// <summary>
+        /// get xplane variables as fast as possible
+        /// send xplane commands as fast as possible
+        /// </summary>
         Xplane.sitl_fdm xplaneBuffer = new Hil.sitl_fdm();
+        private void processXplane()
+        {
+#if NO_NEED
+            if (Variables.WAITING_FOR_PARAM_LIST)
+                return;
+#endif
+
+            float[] aux = { Variables.chan1, Variables.chan2, Variables.chan3, Variables.chan4};
+
+            if (xplane10.READY_XPLANE == false)
+                return;
+
+            xplane10.Get_FromSimulator(ref xplaneBuffer);
+
+            // Hide This if in SITL mode
+            xplane10.SendToSim(aux, xplaneBuffer);
+        }
+#endregion
+
+
+
+
+#region DOUI TIMER REGION
+        // Time to send different mavlink messages etc.       
         DateTime old_millis;
         DateTime curMillis;
         TimeSpan dt_span;
+        int medium_10Hz_counter = 0;
+        float current_rate   = 0;
+        float previous_rate     = 0;
+        float rate           = 0;
+        DateTime previous_time;
+        float[] graphing_variables = new float[14];
         private void DoUI_Timer_Tick(object sender, EventArgs e)
         {
             old_millis = curMillis;
@@ -1500,28 +1521,23 @@ namespace UGCS3
         /// <summary>
         ///  fast loop 30Hz
         /// </summary>
-        float current_rate = 0;
-        float previous_rate = 0;
-        float rate = 0;
-        DateTime previous_time;
-        float[] graphing_variables = new float[14];
         void fast_30Hz_loop()
         {
+            // Invalidate AI at 30Hz
             if (!Variables.WAITING_FOR_PARAM_LIST)
             {
-                float[] aux = { Variables.chan1, Variables.chan2, Variables.chan3, Variables.chan4 };
-
                 Attitude_Indicator.Invalidate();
+            }
 
+            // send mavlink data at 30Hz
+            if (!Variables.WAITING_FOR_PARAM_LIST)
+            {
                 if (xplane10.READY_XPLANE)
                 {
-                    xplane10.Get_FromSimulator(ref xplaneBuffer);
-
-                    Mavlink_Protocol.sendPacket(xplane10.Mavlink_PackHilState(xplaneBuffer));
-
-                    Mavlink_Protocol.sendPacket(xplane10.Mavlink_VfrAirspeed(xplaneBuffer));
-
-                    xplane10.SendToSim(aux);
+                    Mavlink_Protocol.sendPacket(MavlinkExecution.Mavlink_VfrAirspeed(xplaneBuffer));
+                    Mavlink_Protocol.sendPacket(MavlinkExecution.Mavlink_PackHilState(xplane10, xplaneBuffer));
+                    //Mavlink_Protocol.sendPacket(xplane10.Mavlink_PackHilState(xplaneBuffer));
+                    //Mavlink_Protocol.sendPacket(xplane10.Mavlink_VfrAirspeed(xplaneBuffer));
                 }
             }
 
@@ -1576,10 +1592,10 @@ namespace UGCS3
             }
         }
 
+
         /// <summary>
         ///  medium 10Hz loop
         /// </summary>
-        int medium_10Hz_counter = 0;
         void medium_10Hz_loop()
         {
             switch (medium_10Hz_counter)
@@ -1687,10 +1703,10 @@ namespace UGCS3
 
             }
         }
-        #endregion
+#endregion
 
 
-        #region MAP CONTROL REGION
+#region MAP CONTROL REGION
         bool hovering = false;
         private void gMapControl_MouseHover(object sender, EventArgs e)
         {
@@ -1954,11 +1970,83 @@ namespace UGCS3
                 gMapControl.ContextMenuStrip.Items.Add("MISSION START");
                 gMapControl.ContextMenuStrip.Items.Add("GRID");
                 gMapControl.ContextMenuStrip.Items.Add("Populate Grid");
+              
+
+                ToolStripMenuItem MainItem = new ToolStripMenuItem("ModeChange");
+                ToolStripMenuItem amnitem = new ToolStripMenuItem("AUTO",null, new EventHandler(OnModeChangeClicked));
+                ToolStripMenuItem smnitem = new ToolStripMenuItem("STAB",null, new EventHandler(OnModeChangeClicked));
+                ToolStripMenuItem mmnitem = new ToolStripMenuItem("MANU",null, new EventHandler(OnModeChangeClicked));
+                MainItem.DropDownItems.AddRange(new ToolStripItem[] {amnitem, smnitem,mmnitem});
+                gMapControl.ContextMenuStrip.Items.Add(MainItem);
+
+                ToolStripMenuItem RMainItem = new ToolStripMenuItem("Log");
+                ToolStripMenuItem Ramnitem = new ToolStripMenuItem("Flight", null, new EventHandler(OnLogClicked));
+                ToolStripMenuItem Rsmnitem = new ToolStripMenuItem("Hil", null, new EventHandler(OnLogClicked));
+                RMainItem.DropDownItems.AddRange(new ToolStripItem[] { Ramnitem, Rsmnitem });
+                gMapControl.ContextMenuStrip.Items.Add(RMainItem);
+
                 gMapControl.ContextMenuStrip.ItemClicked += ContextMenuStrip_ItemClicked;
                 gMapControl.ContextMenuStrip.Show(Cursor.Position);
                 gMapControl.ContextMenuStrip = null;
+
+
+
             }
         }
+
+
+        /*
+         * Consider changing context form so that it works like this.
+         * This work really well
+         */ 
+        private  void OnModeChangeClicked(object sender, EventArgs e)
+        {
+            MAVLink.mavlink_command_long_t mavcommand = new MAVLink.mavlink_command_long_t();
+
+            mavcommand.command          = (byte)MAVLink.MAV_CMD.DO_SET_MODE;
+            mavcommand.target_system    = Variables.UAVID;
+            mavcommand.target_component = (byte)MAVLink.MAV_COMPONENT.MAV_COMP_ID_SYSTEM_CONTROL;
+
+            switch ((sender as ToolStripMenuItem).Text)
+            {
+                case "AUTO":
+                    mavcommand.param1 = (byte)MAVLink.MAV_MODE.AUTO_ARMED;
+                    break;
+
+                case "STAB":
+                    mavcommand.param1 = (byte)MAVLink.MAV_MODE.STABILIZE_ARMED;
+                    break;
+
+                case "MANU":
+                    mavcommand.param1 = (byte)MAVLink.MAV_MODE.MANUAL_ARMED;
+                    break;
+            }
+
+            Console.WriteLine("GCS mode change request : " + (sender as ToolStripMenuItem).Text);
+
+            Mavlink_Protocol.sendPacket(mavcommand);
+        }
+
+
+        /// <summary>
+        /// Report clicked for Hil and Flight report generation
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnLogClicked(object sender, EventArgs e)
+        {
+            switch ((sender as ToolStripMenuItem).Text)
+            {
+                case "Flight":                   
+                    break;
+
+                case "Hil":
+                    Variables.start_hil_log = true;
+                    break;
+            }
+            Console.WriteLine("Logging " + (sender as ToolStripMenuItem).Text + " Data");
+        }
+
 
         private void iam_clicked(object sender, EventArgs e)
         {
@@ -2379,6 +2467,9 @@ namespace UGCS3
                 case "Populate Grid":
 
                     break;
+
+                case "ModeChange":
+                    break;
             }
         }
 
@@ -2598,10 +2689,10 @@ namespace UGCS3
                 }
             }
         }
-        #endregion
+#endregion
 
 
-        #region PLAYBACKS
+#region PLAYBACKS
         private void plotLatLng_button_Click(object sender, EventArgs e)
         {
             List<PointLatLng> points = SettingsCntrl.plotLatLng_button_Clicked(sender, e);
@@ -2618,10 +2709,10 @@ namespace UGCS3
 
             gMapControl.ZoomAndCenterRoute(route);
         }
-        #endregion
+#endregion
 
 
-        #region  ******************* SERIAL CONNECTION *********************************
+#region  ******************* SERIAL CONNECTION *********************************
         private bool device_connected()
         {
             return Mavlink_Protocol.get_sp().IsOpen && !Variables.WAITING_FOR_PARAM_LIST;
@@ -2714,8 +2805,12 @@ namespace UGCS3
                 System_Timer.Enabled = false;
                 System_Timer.Stop();
             }
+
             // check for reception of parameters
             Start_TimerEvent(LIST_TIMER_EVENTS.PARAMETER_LIST, 10);
+
+            // Log Parameters Initialisation
+            Log.Log.Reset();
         }
 
         /// <summary>
@@ -2738,10 +2833,10 @@ namespace UGCS3
             }
             dispose_mainBackgroundWorker();
         }
-        #endregion
+#endregion
 
 
-        #region ****************** READ AND WRITE WAYPOINTS ********************
+#region ****************** READ AND WRITE WAYPOINTS ********************
         // bool write_success            = false;
         private void _bwWayPoints_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -3029,10 +3124,10 @@ namespace UGCS3
                     return "WAYPOINT";
             }
         }
-        #endregion
+#endregion
 
 
-        #region WAYPOINTS DATAGRIDVIEW REGION
+#region WAYPOINTS DATAGRIDVIEW REGION
         /// <summary>
         ///  occurs when a cell has been clicked Z REMOVE WAYPOINTS THROUGH THIS METHOD
         /// </summary>
@@ -3117,7 +3212,14 @@ namespace UGCS3
                     MessageBox.Show("Alert", ex.Message);
                 }
 
-                (WayPoint_DataGridView.Rows[i].Cells[8] as DataGridViewTextBoxCell).Value = Common.common.gradient(WPCoordinates.ToArray()[i], WPCoordinates.ToArray()[i + 1], alt1, alt2, this.gMapControl);
+                try
+                {
+                    (WayPoint_DataGridView.Rows[i].Cells[8] as DataGridViewTextBoxCell).Value = Common.common.gradient(WPCoordinates.ToArray()[i], WPCoordinates.ToArray()[i + 1], alt1, alt2, this.gMapControl);
+                }
+                catch(SystemException ex)
+                {
+                    MessageBox.Show("Alert, Task Violation", ex.Message);
+                }
             }
         }
 
@@ -3314,10 +3416,15 @@ namespace UGCS3
             }
         }
 
-        #endregion
+#endregion
 
 
-        #region HARDWARE IN LOOP
+#region HARDWARE IN LOOP
+        /// <summary>
+        /// locate Xplane and start program
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void startXplaneButton_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofldg = new OpenFileDialog();
@@ -3338,6 +3445,11 @@ namespace UGCS3
         }
 
 
+        /// <summary>
+        /// create a UDP connection to xplane
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void udpconnectButton_Click(object sender, EventArgs e)
         {
             if (SettingsCntrl.udpconnectButton.Text == "udp connect")
@@ -3403,10 +3515,12 @@ namespace UGCS3
                 }
             }
         }
-        #endregion
 
 
-        #region VFR DISPLAY ON AI
+#endregion
+
+
+#region VFR DISPLAY ON AI
         string old_mode;
         string gps_error;
         string baro_error;
@@ -3485,10 +3599,44 @@ namespace UGCS3
             }
             old_mode = ModeLabel.Text;
         }
-        #endregion
+#endregion
 
 
-        # region PARAMETERS REGION
+#region PARAMETERS REGION
+
+
+        /// <summary>
+        /// Uploading parameters
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void UploadButton_Click(object sender, EventArgs e)
+        {
+            Upload_Parameter();
+        }
+
+        /// <summary>
+        /// upload paramters
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void UploadButton_MouseEnter(object sender, EventArgs e)
+        {
+            if (tip != null)
+            {
+                tip.Dispose();
+                tip = null;
+            }
+            tip = new ToolTip();
+            tip.Show("Upload Changed Parameters", UploadButton);
+        }
+
+
+        /// <summary>
+        /// load custom parameters from a file to the data grid
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Parameter_button_Click(object sender, EventArgs e)
         {
             OpenFileDialog openfld = new OpenFileDialog();
@@ -3556,7 +3704,9 @@ namespace UGCS3
             }
         }
 
-
+        /// <summary>
+        /// upload parameters method, runs in the main background worker thread.
+        /// </summary>
         private void Upload_Parameter()
         {
             int mask_index = PARAM_INDEX_COUNTER; // get the mask index
@@ -3590,10 +3740,10 @@ namespace UGCS3
             }
         }
 
-        #endregion
+#endregion
 
 
-        #region CONTROL EVENTS
+#region CONTROL EVENTS
         /// <summary>
         ///  Paint event for the attitude indicator --> invoked to draw the attitude indicator
         /// </summary>
@@ -3617,10 +3767,10 @@ namespace UGCS3
 #endif
 
         }
-        #endregion
+#endregion
 
 
-        #region SYSTEM TIMER REGION
+#region SYSTEM TIMER REGION
         /// <summary>
         /// Gloabl Timer Event,  manually invoked while Timer is running so that the timer can switch to processing a different event
         /// </summary>
@@ -3767,10 +3917,10 @@ namespace UGCS3
                 }
             }
         }
-        #endregion
+#endregion
 
 
-        #region MAIN VIEW CLOSING
+#region MAIN VIEW CLOSING
         /// <summary>
         ///  Main view closing events : dispose all objects here
         /// </summary>
@@ -3824,6 +3974,6 @@ namespace UGCS3
                 Speech = null;
             }
         }
-        #endregion
+#endregion
     }
 }
