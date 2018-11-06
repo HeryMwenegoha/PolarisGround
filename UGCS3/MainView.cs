@@ -17,7 +17,7 @@
 */
 
 /* 
- * This Program has been created by Hery A Mwenegoha(C) 2017
+ * This Program has been developed by Hery A Mwenegoha(C) 2017
  * First Public release February 2018
  * Use this with the custom flight control system
  * mavlink framing implemented with some custom changes.
