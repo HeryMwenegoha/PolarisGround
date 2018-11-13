@@ -5,6 +5,8 @@ Copyright (C) 2017 Hery A Mwenegoha.
 
 Works with PolarisAir.
 
+![](../master/images/Polaris_UGCS3.PNG)
+
 ## Setup and Functions
 Tested on VS2017 and VS2015.
 
