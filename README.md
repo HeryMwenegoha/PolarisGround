@@ -23,4 +23,6 @@ Hardware-in-Loop interface with Xplane10 and the FCS.
   1.3. Optimise logger
 2. Optimisation...
 
-Still a long way from having a fully functioning ground control station and flight control sytsem, let me know if you would like to help.
+## Contribution
+Hery A Mwenegoha developed the GCS (algorithms, integration)
+Bennie Mwiinga designed the assets
