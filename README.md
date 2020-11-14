@@ -25,4 +25,5 @@ Hardware-in-Loop interface with Xplane10 and the FCS.
 
 ## Contribution
 Hery A Mwenegoha developed the GCS (algorithms, integration)
+
 Bennie Mwiinga designed the assets
